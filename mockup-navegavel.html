@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RE:COMBO - O arquivo como semente</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      /* Automotive Design System - Dark Theme */
+      --bg-primary: #0A0A0B;
+      --bg-secondary: #141416;
+      --bg-tertiary: #1C1C1F;
+      --bg-elevated: #242428;
+      
+      --surface: #1E1E21;
+      --surface-hover: #2A2A2E;
+      
+      --text-primary: #FAFAFA;
+      --text-secondary: #A1A1AA;
+      --text-tertiary: #71717A;
+      --text-muted: #52525B;
+      
+      --accent: #E8634B;
+      --accent-hover: #D4533B;
+      --accent-muted: rgba(232, 99, 75, 0.15);
+      
+      --border: #27272A;
+      --border-subtle: #1F1F22;
+      
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+      
+      /* Spacing */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      
+      /* Radius */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+    }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 11, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .header-top {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-8);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+    
+    .logo-img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+    
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .logo-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    
+    .logo-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    
+    .nav {
+      display: none;
+      gap: var(--space-1);
+    }
+    
+    @media (min-width: 1024px) {
+      .nav {
+        display: flex;
+      }
+    }
+    
+    .nav a {
+      padding: var(--space-2) var(--space-4);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+    }
+    
+    .nav a:hover {
+      color: var(--text-primary);
+      background: var(--surface-hover);
+    }
+    
+    .nav a.active {
+      color: var(--text-primary);
+      background: var(--accent-muted);
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .icon-btn {
+      padding: var(--space-2);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .icon-btn:hover {
+      color: var(--text-primary);
+      background: var(--surface-hover);
+    }
+    
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .menu-btn {
+      display: flex;
+    }
+    
+    @media (min-width: 1024px) {
+      .menu-btn {
+        display: none;
+      }
+    }
+    
+    .tags-bar {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-3) var(--space-6);
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .tags-bar::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .tags-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-right: var(--space-2);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .tag {
+      display: inline-flex;
+      padding: var(--space-1) var(--space-3);
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+    }
+    
+    .tag:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+    
+    /* Main Content */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+    }
+    
+    /* Pages */
+    .page {
+      display: none;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    /* Hero */
+    .hero {
+      position: relative;
+      padding: var(--space-16) 0;
+      margin-bottom: var(--space-12);
+      overflow: hidden;
+    }
+    
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120%;
+      height: 100%;
+      background: radial-gradient(ellipse at center top, rgba(232, 99, 75, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    
+    .hero-content {
+      position: relative;
+      max-width: 800px;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--accent-muted);
+      border: 1px solid rgba(232, 99, 75, 0.3);
+      border-radius: var(--radius-xl);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-6);
+    }
+    
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .hero h1 {
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: var(--space-4);
+      background: linear-gradient(180deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero .subtitle {
+      font-size: clamp(1.25rem, 3vw, 1.75rem);
+      color: var(--text-secondary);
+      font-weight: 300;
+      margin-bottom: var(--space-6);
+      letter-spacing: -0.01em;
+    }
+    
+    .hero .description {
+      font-size: 1.125rem;
+      color: var(--text-tertiary);
+      max-width: 640px;
+      margin-bottom: var(--space-8);
+      line-height: 1.8;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-6);
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--text-tertiary);
+    }
+    
+    /* Stats Grid */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+      margin-top: var(--space-12);
+      padding-top: var(--space-8);
+      border-top: 1px solid var(--border-subtle);
+    }
+    
+    @media (min-width: 768px) {
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+    
+    .stat-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--accent);
+    }
+    
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+    
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    /* Sections */
+    .section {
+      margin-bottom: var(--space-16);
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-6);
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .section-link {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      transition: all var(--transition-fast);
+    }
+    
+    .section-link:hover {
+      gap: var(--space-2);
+    }
+    
+    /* Type Cards Grid */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+    }
+    
+    @media (min-width: 768px) {
+      .type-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    .type-card {
+      padding: var(--space-6);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      transition: all var(--transition-normal);
+    }
+    
+    .type-card:hover {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+    }
+    
+    .type-card-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+      transition: all var(--transition-fast);
+    }
+    
+    .type-card:hover .type-card-icon {
+      background: var(--accent-muted);
+    }
+    
+    .type-card svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text-tertiary);
+      transition: all var(--transition-fast);
+    }
+    
+    .type-card:hover svg {
+      color: var(--accent);
+    }
+    
+    .type-card-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .type-card-count {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+    }
+    
+    /* Artwork Grid */
+    .artwork-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: var(--space-6);
+    }
+    
+    @media (min-width: 640px) {
+      .artwork-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .artwork-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .artwork-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      text-decoration: none;
+      transition: all var(--transition-normal);
+    }
+    
+    .artwork-card:hover {
+      border-color: var(--text-tertiary);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .artwork-thumb {
+      aspect-ratio: 16/10;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .artwork-thumb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.6) 100%);
+    }
+    
+    .artwork-thumb svg {
+      width: 48px;
+      height: 48px;
+      color: var(--text-muted);
+    }
+    
+    .artwork-type {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+      padding: var(--space-1) var(--space-3);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      color: var(--text-primary);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      z-index: 1;
+    }
+    
+    .artwork-info {
+      padding: var(--space-5);
+    }
+    
+    .artwork-year {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .artwork-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: var(--space-2) 0;
+      font-size: 1rem;
+    }
+    
+    .artwork-artists {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+    }
+    
+    /* Archive Layout */
+    .archive-layout {
+      display: flex;
+      gap: var(--space-8);
+    }
+    
+    @media (max-width: 1023px) {
+      .archive-layout {
+        flex-direction: column;
+      }
+    }
+    
+    .filters {
+      width: 240px;
+      flex-shrink: 0;
+    }
+    
+    @media (max-width: 1023px) {
+      .filters {
+        width: 100%;
+      }
+    }
+    
+    .filter-section {
+      margin-bottom: var(--space-6);
+    }
+    
+    .filter-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-3);
+      display: block;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    
+    .filter-btn {
+      padding: var(--space-2) var(--space-3);
+      font-size: 0.875rem;
+      text-align: left;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    
+    .filter-btn:hover {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+    
+    .filter-btn.active {
+      background: var(--accent-muted);
+      color: var(--accent);
+    }
+    
+    .archive-main {
+      flex: 1;
+    }
+    
+    .archive-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-6);
+    }
+    
+    .results-count {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      transition: all var(--transition-fast);
+    }
+    
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-muted);
+    }
+    
+    /* About Page */
+    .about-hero {
+      text-align: center;
+      margin-bottom: var(--space-16);
+      padding: var(--space-12) 0;
+    }
+    
+    .about-hero h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-6);
+    }
+    
+    .about-hero p {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      max-width: 720px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+    
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: var(--space-6);
+      margin-bottom: var(--space-16);
+    }
+    
+    @media (min-width: 768px) {
+      .values-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .value-card {
+      text-align: center;
+      padding: var(--space-8);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+    }
+    
+    .value-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-6);
+      background: var(--accent-muted);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .value-icon svg {
+      width: 32px;
+      height: 32px;
+      color: var(--accent);
+    }
+    
+    .value-title {
+      font-weight: 600;
+      font-size: 1.125rem;
+      margin-bottom: var(--space-3);
+    }
+    
+    .value-desc {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+      line-height: 1.7;
+    }
+    
+    /* Timeline */
+    .timeline {
+      position: relative;
+      padding-left: var(--space-8);
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding-bottom: var(--space-8);
+    }
+    
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+    
+    .timeline-dot {
+      position: absolute;
+      left: calc(-1 * var(--space-8) + 3px);
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 2px solid var(--bg-primary);
+    }
+    
+    .timeline-year {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-2);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .timeline-title {
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+      font-size: 1.125rem;
+    }
+    
+    .timeline-desc {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+      line-height: 1.7;
+    }
+    
+    /* Community */
+    .community-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+    
+    @media (min-width: 768px) {
+      .community-grid {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+    
+    .community-feed {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+    }
+    
+    .community-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    
+    .community-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+    
+    .community-card h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-4);
+    }
+    
+    .event-item {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .event-item:last-child {
+      border-bottom: none;
+    }
+    
+    .event-date {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 600;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .event-title {
+      font-size: 0.875rem;
+      color: var(--text-primary);
+    }
+    
+    .post-item {
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .post-item:last-child {
+      border-bottom: none;
+    }
+    
+    .post-author {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+    
+    .post-content {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .post-content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    .post-content a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Footer */
+    .footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-subtle);
+      padding: var(--space-16) var(--space-6);
+      margin-top: var(--space-16);
+    }
+    
+    .footer-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+      margin-bottom: var(--space-10);
+    }
+    
+    @media (min-width: 768px) {
+      .footer-grid {
+        grid-template-columns: 2fr 1fr 1fr;
+      }
+    }
+    
+    .footer h3 {
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: var(--space-4);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .footer p {
+      font-size: 0.875rem;
+      line-height: 1.8;
+      color: var(--text-tertiary);
+    }
+    
+    .footer-links {
+      list-style: none;
+    }
+    
+    .footer-links a {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      display: block;
+      padding: var(--space-2) 0;
+      transition: all var(--transition-fast);
+    }
+    
+    .footer-links a:hover {
+      color: var(--text-primary);
+    }
+    
+    .footer-bottom {
+      padding-top: var(--space-8);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    @media (min-width: 768px) {
+      .footer-bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+    
+    .footer-bottom-links {
+      display: flex;
+      gap: var(--space-6);
+    }
+    
+    .footer-bottom-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    
+    .footer-bottom-links a:hover {
+      color: var(--text-primary);
+    }
+    
+    /* Utility */
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-3);
+    }
+    
+    .page-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-8);
+      font-size: 1.125rem;
+    }
+    
+    .section-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: var(--space-12) 0;
+    }
+    
+    /* Map/Network Placeholder */
+    .placeholder-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-12);
+      text-align: center;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .placeholder-icon {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-6);
+    }
+    
+    .placeholder-icon svg {
+      width: 40px;
+      height: 40px;
+      color: var(--text-muted);
+    }
+    
+    .placeholder-title {
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+    
+    .placeholder-desc {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+      max-width: 400px;
+    }
+    
+    /* Members Grid */
+    .members-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+    
+    .member-tag {
+      padding: var(--space-2) var(--space-4);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    /* LUCR Card */
+    .lucr-card {
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--surface) 100%);
+      border: 1px solid var(--border);
+      padding: var(--space-8);
+      border-radius: var(--radius-xl);
+    }
+    
+    .lucr-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+      color: var(--accent);
+    }
+    
+    .lucr-card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <a href="#" class="logo" onclick="showPage('home')">
+        <img src="recombo.png" alt="RE:COMBO" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="logo-text" style="display: none;">
+          <span class="logo-title">re:combo</span>
+          <span class="logo-subtitle">o arquivo como semente</span>
+        </div>
+      </a>
+      
+      <nav class="nav">
+        <a href="#" class="active" onclick="showPage('home')">Home</a>
+        <a href="#" onclick="showPage('archive')">Acervo</a>
+        <a href="#" onclick="showPage('timeline')">Timeline</a>
+        <a href="#" onclick="showPage('map')">Mapa</a>
+        <a href="#" onclick="showPage('network')">Rede</a>
+        <a href="#" onclick="showPage('about')">Sobre</a>
+        <a href="#" onclick="showPage('community')">Comunidade</a>
+      </nav>
+      
+      <div class="header-actions">
+        <button class="icon-btn">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+        <button class="icon-btn menu-btn">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="tags-bar">
+      <span class="tags-label">Tags:</span>
+      <a href="#" class="tag" onclick="showPage('archive')">remix</a>
+      <a href="#" class="tag" onclick="showPage('archive')">net.art</a>
+      <a href="#" class="tag" onclick="showPage('archive')">performance</a>
+      <a href="#" class="tag" onclick="showPage('archive')">áudio</a>
+      <a href="#" class="tag" onclick="showPage('archive')">glitch</a>
+      <a href="#" class="tag" onclick="showPage('archive')">colaboração</a>
+      <a href="#" class="tag" onclick="showPage('archive')">manguebeat</a>
+      <a href="#" class="tag" onclick="showPage('archive')">software livre</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- HOME PAGE -->
+    <div id="home" class="page active">
+      <div class="hero">
+        <div class="hero-content">
+          <div class="hero-badge">Arquivo Digital</div>
+          <h1>re:combo</h1>
+          <p class="subtitle">O arquivo como semente</p>
+          <p class="description">
+            Arquivo digital do coletivo Re:combo (2001-2008), pioneiro em produção 
+            artística colaborativa via internet. Um projeto de resgate, preservação 
+            e Germinação da memória digital pernambucana.
+          </p>
+          <div class="hero-buttons">
+            <a href="#" class="btn btn-primary" onclick="showPage('archive')">
+              Explorar Acervo
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </a>
+            <a href="#" class="btn btn-secondary" onclick="showPage('about')">Saber Mais</a>
+          </div>
+          
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">500+</div>
+                <div class="stat-label">Obras</div>
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">30+</div>
+                <div class="stat-label">Artistas</div>
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">2001-2008</div>
+                <div class="stat-label">Anos</div>
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">15+</div>
+                <div class="stat-label">Cidades</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">Navegue por Tipo</h2>
+          <a href="#" class="section-link" onclick="showPage('archive')">
+            Ver todo
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+        <div class="type-grid">
+          <a href="#" class="type-card" onclick="showPage('archive')">
+            <div class="type-card-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+              </svg>
+            </div>
+            <div class="type-card-title">Áudio</div>
+            <div class="type-card-count">120 itens</div>
+          </a>
+          <a href="#" class="type-card" onclick="showPage('archive')">
+            <div class="type-card-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="type-card-title">Vídeo</div>
+            <div class="type-card-count">45 itens</div>
+          </a>
+          <a href="#" class="type-card" onclick="showPage('archive')">
+            <div class="type-card-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M4 16l4.586-4.589a2 2 0 012.828 0L16 16m-2-2l1.586-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="type-card-title">Imagem</div>
+            <div class="type-card-count">280 itens</div>
+          </a>
+          <a href="#" class="type-card" onclick="showPage('archive')">
+            <div class="type-card-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <div class="type-card-title">Texto</div>
+            <div class="type-card-count">55 itens</div>
+          </a>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">Destaques</h2>
+        </div>
+        <div class="artwork-grid">
+          <a href="#" class="artwork-card">
+            <div class="artwork-thumb">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="artwork-type">
+                <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 19V6l12-3v13"/>
+                </svg>
+                performance
+              </span>
+            </div>
+            <div class="artwork-info">
+              <div class="artwork-year">2002</div>
+              <div class="artwork-title">Call for Noise</div>
+              <div class="artwork-artists">Coletivo Re:combo</div>
+            </div>
+          </a>
+          <a href="#" class="artwork-card">
+            <div class="artwork-thumb">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M9 19V6l12-3v13"/>
+              </svg>
+              <span class="artwork-type">
+                <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 19V6l12-3v13"/>
+                </svg>
+                audio
+              </span>
+            </div>
+            <div class="artwork-info">
+              <div class="artwork-year">2004</div>
+              <div class="artwork-title">Rádio Re:combo</div>
+              <div class="artwork-artists">H.D. Mabuse, Haidée Lima</div>
+            </div>
+          </a>
+          <a href="#" class="artwork-card">
+            <div class="artwork-thumb">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M4 16l4.586-4.589a2 2 0 012.828 0L16 16m-2-2l1.586-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <span class="artwork-type">
+                <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 16l4.586-4.589a2 2 0 012.828 0L16 16m-2-2l1.586-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                image
+              </span>
+            </div>
+            <div class="artwork-info">
+              <div class="artwork-year">2004</div>
+              <div class="artwork-title">Constelações</div>
+              <div class="artwork-artists">Coletivo Re:combo</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ARCHIVE PAGE -->
+    <div id="archive" class="page">
+      <h1 class="page-title">Acervo</h1>
+      <p class="page-subtitle">Explore as obras, performances e arquivos do coletivo Re:combo</p>
+      
+      <div class="archive-layout">
+        <aside class="filters">
+          <div class="filter-section">
+            <label class="filter-label">Buscar</label>
+            <input type="text" class="search-input" placeholder="Buscar obras...">
+          </div>
+          
+          <div class="filter-section">
+            <label class="filter-label">Tipo</label>
+            <div class="filter-group">
+              <button class="filter-btn active">Todos</button>
+              <button class="filter-btn">Áudio</button>
+              <button class="filter-btn">Vídeo</button>
+              <button class="filter-btn">Imagem</button>
+              <button class="filter-btn">Texto</button>
+              <button class="filter-btn">Performance</button>
+              <button class="filter-btn">Instalação</button>
+            </div>
+          </div>
+          
+          <div class="filter-section">
+            <label class="filter-label">Ano</label>
+            <div class="filter-group">
+              <button class="filter-btn">2001</button>
+              <button class="filter-btn">2002</button>
+              <button class="filter-btn">2003</button>
+              <button class="filter-btn">2004</button>
+              <button class="filter-btn">2005</button>
+              <button class="filter-btn">2006</button>
+              <button class="filter-btn">2007</button>
+              <button class="filter-btn">2008</button>
+            </div>
+          </div>
+        </aside>
+        
+        <div class="archive-main">
+          <div class="archive-header">
+            <span class="results-count">8 resultados encontrados</span>
+          </div>
+          
+          <div class="artwork-grid">
+            <a href="#" class="artwork-card">
+              <div class="artwork-thumb">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="artwork-type">performance</span>
+              </div>
+              <div class="artwork-info">
+                <div class="artwork-year">2002</div>
+                <div class="artwork-title">Call for Noise</div>
+                <div class="artwork-artists">Coletivo Re:combo</div>
+              </div>
+            </a>
+            <a href="#" class="artwork-card">
+              <div class="artwork-thumb">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M9 19V6l12-3v13"/>
+                </svg>
+                <span class="artwork-type">audio</span>
+              </div>
+              <div class="artwork-info">
+                <div class="artwork-year">2004</div>
+                <div class="artwork-title">Rádio Re:combo</div>
+                <div class="artwork-artists">H.D. Mabuse, Haidée Lima</div>
+              </div>
+            </a>
+            <a href="#" class="artwork-card">
+              <div class="artwork-thumb">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M4 16l4.586-4.589a2 2 0 012.828 0L16 16m-2-2l1.586-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span class="artwork-type">image</span>
+              </div>
+              <div class="artwork-info">
+                <div class="artwork-year">2004</div>
+                <div class="artwork-title">Constelações</div>
+                <div class="artwork-artists">Coletivo Re:combo</div>
+              </div>
+            </a>
+            <a href="#" class="artwork-card">
+              <div class="artwork-thumb">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M4 16l4.586-4.589a2 2 0 012.828 0L16 16m-2-2l1.586-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span class="artwork-type">installation</span>
+              </div>
+              <div class="artwork-info">
+                <div class="artwork-year">2006</div>
+                <div class="artwork-title">Mundo Pequeno</div>
+                <div class="artwork-artists">Coletivo Re:combo</div>
+              </div>
+            </a>
+            <a href="#" class="artwork-card">
+              <div class="artwork-thumb">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="artwork-type">performance</span>
+              </div>
+              <div class="artwork-info">
+                <div class="artwork-year">2004</div>
+                <div class="artwork-title">Pause and Play</div>
+                <div class="artwork-artists">Coletivo Re:combo</div>
+              </div>
+            </a>
+            <a href="#" class="artwork-card">
+              <div class="artwork-thumb">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M9 19V6l12-3v13"/>
+                </svg>
+                <span class="artwork-type">audio</span>
+              </div>
+              <div class="artwork-info">
+                <div class="artwork-year">2003</div>
+                <div class="artwork-title">Transloc Mixer</div>
+                <div class="artwork-artists">Coletivo Re:combo</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TIMELINE PAGE -->
+    <div id="timeline" class="page">
+      <h1 class="page-title">Linha do Tempo</h1>
+      <p class="page-subtitle">A trajetória do coletivo Re:combo de 2001 a 2008</p>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2001</div>
+          <div class="timeline-title">Fundação do Re:combo</div>
+          <div class="timeline-desc">Coletivo surge em Recife (PE) com foco em produção musical colaborativa via internet.</div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2002</div>
+          <div class="timeline-title">Abril Pro Rock - Call for Noise</div>
+          <div class="timeline-desc">Performance de 6 horas com membros do coletivo se alternando em uma "gaiola", recebendo convidados de várias partes do mundo.</div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2003</div>
+          <div class="timeline-title">Transloc Mixer</div>
+          <div class="timeline-desc">Desenvolvido para a exposição "When Latitudes Became Forms" no Walker Art Institute, Minneapolis (EUA).</div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2004</div>
+          <div class="timeline-title">Rádio Re:combo - Itaú Cultural</div>
+          <div class="timeline-desc">Apresentação unindo performance musical e instalação interativa, utilizando aplicação web multiusuário.</div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2004</div>
+          <div class="timeline-title">Constelações</div>
+          <div class="timeline-desc">Instalação no SonarSoundSP/Nokia Trends que transformava mensagens SMS em estrelas projetadas no teto.</div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2006</div>
+          <div class="timeline-title">Mundo Pequeno</div>
+          <div class="timeline-desc">Exposição no MAMAM com lambe-lambes criados a partir de imagens enviadas por membros do grupo em diversas cidades.</div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-year">2008</div>
+          <div class="timeline-title">Encerramento</div>
+          <div class="timeline-desc">Coletivo encerra atividades após 7 anos de produção contínua.</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MAP PAGE -->
+    <div id="map" class="page">
+      <h1 class="page-title">Mapa</h1>
+      <p class="page-subtitle">Localizações dos eventos e atividades do Re:combo</p>
+      
+      <div class="placeholder-card">
+        <div class="placeholder-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+        <div class="placeholder-title">Mapa interativo</div>
+        <p class="placeholder-desc">
+          Recife, PE (12 eventos) • São Paulo, SP (4) • Minneapolis, EUA (1) • Weimar, Alemanha (1)
+        </p>
+      </div>
+    </div>
+    
+    <!-- NETWORK PAGE -->
+    <div id="network" class="page">
+      <h1 class="page-title">Rede</h1>
+      <p class="page-subtitle">Conexões entre artistas, obras e eventos</p>
+      
+      <div class="placeholder-card">
+        <div class="placeholder-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+        </div>
+        <div class="placeholder-title">Visualização de rede (graph)</div>
+        <p class="placeholder-desc">
+          H.D. Mabuse colaborou com 15+ artistas • "Call for Noise" conectou 8 países
+        </p>
+      </div>
+    </div>
+    
+    <!-- ABOUT PAGE -->
+    <div id="about" class="page">
+      <div class="about-hero">
+        <h1>Sobre o Re:combo</h1>
+        <p>A história de um coletivo pioneiro que transformou a produção artística no Brasil através da colaboração digital e da generosidade intelectual.</p>
+      </div>
+      
+      <div class="section">
+        <h2 class="section-title" style="margin-bottom: var(--space-6);">Princípios Fundadores</h2>
+        <div class="values-grid">
+          <div class="value-card">
+            <div class="value-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+            </div>
+            <div class="value-title">Generosidade Intelectual</div>
+            <div class="value-desc">Todo conhecimento gerado pelo coletivo era compartilhado livremente.</div>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="value-title">Produção Descentralizada</div>
+            <div class="value-desc">Não havia diferença entre ter integrantes no outro lado da cidade ou do mundo.</div>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <div class="value-title">Recombinação</div>
+            <div class="value-desc">O nome reflete a proposta de "recombinar" meios e conteúdos.</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2 class="section-title" style="margin-bottom: var(--space-4);">Integrantes</h2>
+        <div class="members-grid">
+          <span class="member-tag">H.D. Mabuse</span>
+          <span class="member-tag">Haidée Lima</span>
+          <span class="member-tag">Queops Negronski</span>
+          <span class="member-tag">Prof Miguel</span>
+          <span class="member-tag">Sandrinha</span>
+          <span class="member-tag">Osman Frazão Lima</span>
+          <span class="member-tag">Carlos Freitas</span>
+          <span class="member-tag">Chico Corrêa</span>
+          <span class="member-tag">+18 outros</span>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="lucr-card">
+          <h2>LUCR - Licença de Uso Completo Re:combo</h2>
+          <p>
+            Em 2003, o coletivo criou a LUCR, um antecedente influente para as licenças Creative Commons no Brasil.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- COMMUNITY PAGE -->
+    <div id="community" class="page">
+      <h1 class="page-title">Comunidade</h1>
+      <p class="page-subtitle">Conecte-se com outros enthusiasts da cultura digital</p>
+      
+      <div class="community-grid">
+        <div class="community-feed">
+          <h3 style="font-size: 0.75rem; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-4);">Últimas Publicações</h3>
+          <div class="post-item">
+            <div class="post-author">H.D. Mabuse</div>
+            <div class="post-content">Nova obra adicionada ao acervo: "Mundo Pequeno" - Exposição no MAMAM de 2006. <a href="#">#recombo #mamam</a></div>
+          </div>
+          <div class="post-item">
+            <div class="post-author">Projeto Re:combo</div>
+            <div class="post-content">Inscrições abertas para a oficina "Germinando Futuros: IA Gerativa e Software Livre". limited a 20 vagas!</div>
+          </div>
+        </div>
+        
+        <div class="community-sidebar">
+          <div class="community-card">
+            <h3>Próximos Eventos</h3>
+            <div class="event-item">
+              <div class="event-date">Jun 2026</div>
+              <div class="event-title">Oficina "Germinando Futuros"</div>
+            </div>
+            <div class="event-item">
+              <div class="event-date">Jul 2026</div>
+              <div class="event-title">Lançamento do arquivo digital</div>
+            </div>
+          </div>
+          
+          <div class="community-card">
+            <h3>Estatísticas</h3>
+            <p style="font-size: 0.875rem; color: var(--text-tertiary);">
+              120 membros • 45 discussões • 12 eventos
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-grid">
+        <div>
+          <h3>re:combo</h3>
+          <p>
+            O arquivo digital do coletivo Re:combo (2001-2008), pioneiro em produção 
+            artística colaborativa via internet. O projeto propõe o resgate e 
+            revitalização do acervo, conectando memória digital, software livre 
+            e generosidade intelectual.
+          </p>
+        </div>
+        <div>
+          <h3>Navegação</h3>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('archive')">Acervo</a></li>
+            <li><a href="#" onclick="showPage('timeline')">Linha do Tempo</a></li>
+            <li><a href="#" onclick="showPage('map')">Mapa</a></li>
+            <li><a href="#" onclick="showPage('network')">Rede</a></li>
+            <li><a href="#" onclick="showPage('about')">Sobre</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Licença</h3>
+          <p>
+            Todo o conteúdo disponível sob a Licença LUCR e Creative Commons.
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 RE:COMBO. Projeto cultural sem fins lucrativos.</span>
+        <div class="footer-bottom-links">
+          <a href="#">Privacidade</a>
+          <a href="#">Termos</a>
+          <a href="#">Código aberto</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      const page = document.getElementById(pageId);
+      if (page) {
+        page.classList.add('active');
+      }
+      
+      document.querySelectorAll('.nav a').forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      const navMap = {
+        'home': 'Home',
+        'archive': 'Acervo',
+        'timeline': 'Timeline',
+        'map': 'Mapa',
+        'network': 'Rede',
+        'about': 'Sobre',
+        'community': 'Comunidade'
+      };
+      
+      const activeText = navMap[pageId];
+      document.querySelectorAll('.nav a').forEach(link => {
+        if (link.textContent.includes(activeText)) {
+          link.classList.add('active');
+        }
+      });
+      
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>

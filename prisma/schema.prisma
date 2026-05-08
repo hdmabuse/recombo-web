@@ -1,0 +1,358 @@
+// prisma/schema.prisma - Sistema de Cadastro de Acervo
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ ENTIDADES PRINCIPAIS ============
+
+model Artist {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  pseudonym   String?
+  bio         String?  @db.Text
+  bioShort    String?  @db.Text
+  photo       String?
+  email       String?
+  website     String?
+  social      Json?    // { twitter, instagram, etc }
+  
+  roles       String[]
+  period      String?
+  birthDate   DateTime?
+  birthPlace  String?
+  
+  artworks    ArtworkArtist[]
+  events      EventParticipant[]
+  interviews  InterviewSubject[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([name])
+}
+
+model Artwork {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?  @db.Text
+  shortDescription String? @db.Text
+  
+  // Classificação
+  type        ArtworkType
+  medium      String?
+  genres      String[] //tags de gênero
+  
+  // Data
+  year        Int?
+  yearStart   Int?
+  yearEnd     Int?
+  
+  // Arquivo principal
+  thumbnail   String?
+  fileUrl     String?
+  fileType    String?  // MIME type
+  fileSize    Int?     // bytes
+  duration    Int?     // segundos
+  resolution  String?
+  codec       String?
+  
+  // Metadados técnicos
+  dimensions  String?
+  colors      String?
+  bitDepth    Int?
+  sampleRate  Int?
+  bitrate     Int?
+  channels    String?
+  
+  // Localização
+  locationCreated String?
+  locationCurrent String?
+  
+  // Licenciamento
+  license     String   @default("LUCR")
+  accessLevel AccessLevel @default(public)
+  
+  // Conteúdo específico por tipo
+  // Audio
+  lyrics      String?  @db.Text
+  // Video
+  director    String?
+  producer    String?
+  cast        Json?   // [{ role, actor }]
+  // Image
+  camera      String?
+  lens        String?
+  aperture    String?
+  shutterSpeed String?
+  iso         Int?
+  // Installation
+  components  Json?   // [{ item, qty, spec }]
+  sensors     String[]
+  // Performance
+  performers  String[]
+  iteration   String?
+  
+  // Controle
+  status      ArtworkStatus @default(draft)
+  
+  tags        String[]
+  customFields Json?
+  
+  artists     ArtworkArtist[]
+  events      EventArtwork[]
+  related     ArtworkRelation[] @relation("related")
+  relationOf  ArtworkRelation[] @relation("relationOf")
+  files       ArtworkFile[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  // user ID
+  
+  @@index([slug])
+  @@index([type])
+  @@index([year])
+  @@index([status])
+  @@index([tags])
+}
+
+model ArtworkArtist {
+  id        String  @id @default(cuid())
+  artworkId String
+  artistId  String
+  role      String? // "criador", "colaborador", "participante", "diretor", etc
+  
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  artist    Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  
+  @@unique([artworkId, artistId])
+}
+
+model ArtworkRelation {
+  id          String  @id @default(cuid())
+  artworkId   String
+  relatedId   String
+  type        RelationType
+  
+  artwork     Artwork @relation("related", fields: [artworkId], references: [id], onDelete: Cascade)
+  related     Artwork @relation("relationOf", fields: [relatedId], references: [id], onDelete: Cascade)
+  
+  @@unique([artworkId, relatedId])
+}
+
+model ArtworkFile {
+  id        String  @id @default(cuid())
+  artworkId String
+  url       String
+  filename  String
+  type      FileType // thumbnail, original, derivative, documentation, source
+  mimeType  String
+  size      Int
+  width     Int?
+  height    Int?
+  duration  Int?
+  bitrate   Int?
+  checksum  String?  // SHA-256
+  
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  
+  @@index([artworkId])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?  @db.Text
+  program     String?  @db.Text
+  
+  type        EventType
+  dateStart   DateTime
+  dateEnd     DateTime?
+  
+  venue       String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  coordinates Json?    // { lat, lng }
+  
+  photos      String[]
+  videos      String[]
+  press       String[]
+  
+  artworks    EventArtwork[]
+  participants EventParticipant[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([dateStart])
+  @@index([type])
+}
+
+model EventArtwork {
+  id        String  @id @default(cuid())
+  eventId   String
+  artworkId String
+  order     Int?
+  
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  
+  @@unique([eventId, artworkId])
+}
+
+model EventParticipant {
+  id        String  @id @default(cuid())
+  eventId   String
+  artistId  String
+  role      String? // "performer", "organizador", "convidado"
+  
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  artist    Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  
+  @@unique([eventId, artistId])
+}
+
+model Interview {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  
+  audioUrl    String?
+  videoUrl    String?
+  transcript  String?  @db.Text
+  transcriptStatus TranscriptStatus @default(pending)
+  summary     String?  @db.Text
+  
+  date        DateTime
+  interviewer String?
+  location    String?
+  
+  keywords    String[]
+  
+  subjects    InterviewSubject[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([date])
+}
+
+model InterviewSubject {
+  id          String  @id @default(cuid())
+  interviewId String
+  artistId    String
+  
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  artist      Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  
+  @@unique([interviewId, artistId])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  category  TagCategory?
+  color     String?
+  count     Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([slug])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(editor)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============ ENUMS ============
+
+enum ArtworkType {
+  audio
+  video
+  image
+  text
+  installation
+  performance
+  website
+  software
+}
+
+enum ArtworkStatus {
+  draft
+  published
+  archived
+}
+
+enum AccessLevel {
+  public
+  private
+  restricted
+}
+
+enum EventType {
+  festival
+  exposição
+  performance
+  workshop
+  lançamento
+  meetup
+}
+
+enum FileType {
+  thumbnail
+  original
+  derivative
+  documentation
+  source
+}
+
+enum RelationType {
+  inspired_by
+  remix_of
+  collab_with
+  reference_to
+  continuation_of
+  responds_to
+  part_of
+  derivative_of
+}
+
+enum TagCategory {
+  theme
+  technique
+  location
+  period
+  project
+}
+
+enum TranscriptStatus {
+  pending
+  in_progress
+  done
+}
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
