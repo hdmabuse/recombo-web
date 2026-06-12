@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { artistService } from "@/services";
 import { requireRole } from "@/lib/api/guard";
+import { artistCreateSchema, artistUpdateSchema } from "@/lib/validation/admin";
 
 export async function GET(request: Request) {
   try {
@@ -33,8 +34,14 @@ export async function POST(request: Request) {
   const session = await requireRole(["admin", "editor"]);
   if (session instanceof NextResponse) return session;
   try {
-    const body = await request.json();
-    const artist = await artistService.create(body);
+    const parsed = artistCreateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    const artist = await artistService.create(parsed.data);
     return NextResponse.json(artist);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao criar artista" }, { status: 500 });
@@ -46,8 +53,18 @@ export async function PUT(request: Request) {
   if (session instanceof NextResponse) return session;
   try {
     const body = await request.json();
-    const { id, ...data } = body;
-    const artist = await artistService.update(id, data);
+    const id = body?.id;
+    if (!id) {
+      return NextResponse.json({ error: "ID não fornecido" }, { status: 400 });
+    }
+    const parsed = artistUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    const artist = await artistService.update(id, parsed.data);
     return NextResponse.json(artist);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao atualizar artista" }, { status: 500 });
