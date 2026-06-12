@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { uploadService } from "@/services";
+import { requireRole } from "@/lib/api/guard";
 
 export async function POST(request: Request) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

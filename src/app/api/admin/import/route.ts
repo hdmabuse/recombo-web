@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { importService } from "@/services";
+import { requireRole } from "@/lib/api/guard";
 
 export async function POST(request: NextRequest) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -18,7 +21,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import error:", error);
-    return NextResponse.json({ error: "Erro ao processar importação" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Erro ao processar importação";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

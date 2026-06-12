@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { stripSystemFields } from "@/lib/sanitize";
 
 export const fieldDefinitionService = {
   async findByEntity(entity?: string) {
@@ -10,18 +11,19 @@ export const fieldDefinitionService = {
   },
 
   async create(data: any) {
+    const clean = stripSystemFields(data);
     return prisma.fieldDefinition.create({
       data: {
-        ...data,
-        required: data.required || false,
-        order: data.order || 0,
-        visible: data.visible !== false,
+        ...clean,
+        required: clean.required || false,
+        order: clean.order || 0,
+        visible: clean.visible !== false,
       },
     });
   },
 
   async update(id: string, data: any) {
-    return prisma.fieldDefinition.update({ where: { id }, data });
+    return prisma.fieldDefinition.update({ where: { id }, data: stripSystemFields(data) });
   },
 
   async delete(id: string) {

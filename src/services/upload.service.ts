@@ -1,27 +1,29 @@
 import { supabase } from "@/lib/supabase";
 import { randomUUID } from "crypto";
 
-const ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "image/svg+xml",
-  "audio/mpeg",
-  "audio/wav",
-  "audio/ogg",
-  "audio/flac",
-  "audio/aac",
-  "video/mp4",
-  "video/webm",
-  "video/ogg",
-];
+// Allowlist de tipos -> extensão derivada do MIME (NUNCA do nome do arquivo).
+// SVG removido: é vetor de XSS quando servido de bucket público.
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+  "audio/ogg": "ogg",
+  "audio/flac": "flac",
+  "audio/aac": "aac",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/ogg": "ogv",
+};
 
 const MAX_SIZE = 500 * 1024 * 1024; // 500MB
 
 export const uploadService = {
   async uploadFile(file: File) {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const ext = MIME_TO_EXT[file.type];
+    if (!ext) {
       throw new Error("Tipo de arquivo não permitido");
     }
 
@@ -33,7 +35,6 @@ export const uploadService = {
       throw new Error("Supabase não configurado");
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
     const filename = `${randomUUID()}.${ext}`;
 
     const { error } = await supabase.storage.from("media").upload(filename, file, {
