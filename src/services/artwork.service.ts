@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { stripSystemFields } from "@/lib/sanitize";
 
 export const artworkService = {
   async findAll() {
@@ -32,7 +33,7 @@ export const artworkService = {
   },
 
   async create(data: any) {
-    const { artists, ...fields } = data;
+    const { artists, ...fields } = stripSystemFields(data);
     return prisma.artwork.create({
       data: {
         ...fields,
@@ -49,12 +50,13 @@ export const artworkService = {
   },
 
   async update(id: string, data: any) {
+    const clean = stripSystemFields(data);
     return prisma.artwork.update({
       where: { id },
       data: {
-        ...data,
-        genres: data.genres || [],
-        tags: data.tags || [],
+        ...clean,
+        genres: clean.genres || [],
+        tags: clean.tags || [],
       },
     });
   },

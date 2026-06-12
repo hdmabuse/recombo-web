@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
+import { stripSystemFields } from "@/lib/sanitize";
 
 export const artistService = {
   async findAll() {
@@ -22,18 +23,18 @@ export const artistService = {
   },
 
   async create(data: any) {
-    const slug = slugify(data.name);
+    const clean = stripSystemFields(data);
     return prisma.artist.create({
       data: {
-        slug,
-        ...data,
-        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        ...clean,
+        slug: slugify(clean.name),
+        birthDate: clean.birthDate ? new Date(clean.birthDate) : null,
       },
     });
   },
 
   async update(id: string, data: any) {
-    return prisma.artist.update({ where: { id }, data });
+    return prisma.artist.update({ where: { id }, data: stripSystemFields(data) });
   },
 
   async delete(id: string) {

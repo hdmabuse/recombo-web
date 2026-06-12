@@ -53,13 +53,24 @@ export interface ImportResult {
   errors: { row: number; error: string }[];
 }
 
+const MAX_IMPORT_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_IMPORT_ROWS = 5000;
+
 export const importService = {
   async importCSV(file: File): Promise<ImportResult> {
+    if (file.size > MAX_IMPORT_BYTES) {
+      throw new Error("Arquivo CSV muito grande (máximo 10MB)");
+    }
+
     const content = await file.text();
     const rows = parseCSV(content);
 
     if (rows.length < 2) {
       throw new Error("Arquivo CSV inválido ou vazio");
+    }
+
+    if (rows.length - 1 > MAX_IMPORT_ROWS) {
+      throw new Error(`CSV excede o limite de ${MAX_IMPORT_ROWS} linhas`);
     }
 
     const headers = rows[0].map((h) => h.toLowerCase().trim());

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { stripSystemFields } from "@/lib/sanitize";
 
 export const eventService = {
   async findAll() {
@@ -16,24 +17,25 @@ export const eventService = {
   },
 
   async create(data: any) {
+    const clean = stripSystemFields(data);
     const slug =
-      data.slug ||
-      data.name
+      clean.slug ||
+      clean.name
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
     return prisma.event.create({
       data: {
-        ...data,
+        ...clean,
         slug,
-        dateStart: new Date(data.dateStart),
-        dateEnd: data.dateEnd ? new Date(data.dateEnd) : null,
+        dateStart: new Date(clean.dateStart),
+        dateEnd: clean.dateEnd ? new Date(clean.dateEnd) : null,
       },
     });
   },
 
   async update(id: string, data: any) {
-    return prisma.event.update({ where: { id }, data });
+    return prisma.event.update({ where: { id }, data: stripSystemFields(data) });
   },
 
   async delete(id: string) {

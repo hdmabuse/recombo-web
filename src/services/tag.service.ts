@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { stripSystemFields } from "@/lib/sanitize";
 
 export const tagService = {
   async findAll() {
@@ -6,11 +7,11 @@ export const tagService = {
   },
 
   async create(data: any) {
-    return prisma.tag.create({ data });
+    return prisma.tag.create({ data: stripSystemFields(data) });
   },
 
   async update(id: string, data: any) {
-    return prisma.tag.update({ where: { id }, data });
+    return prisma.tag.update({ where: { id }, data: stripSystemFields(data) });
   },
 
   async delete(id: string) {

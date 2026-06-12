@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { artworkService } from "@/services";
+import { requireRole } from "@/lib/api/guard";
+import { artworkCreateSchema, artworkUpdateSchema } from "@/lib/validation/admin";
 
 export async function GET(request: Request) {
   try {
@@ -29,9 +31,17 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
   try {
-    const body = await request.json();
-    const artwork = await artworkService.create(body);
+    const parsed = artworkCreateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    const artwork = await artworkService.create(parsed.data);
     return NextResponse.json(artwork);
   } catch (error) {
     console.error(error);
@@ -40,10 +50,22 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
   try {
     const body = await request.json();
-    const { id, ...data } = body;
-    const artwork = await artworkService.update(id, data);
+    const id = body?.id;
+    if (!id) {
+      return NextResponse.json({ error: "ID não fornecido" }, { status: 400 });
+    }
+    const parsed = artworkUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    const artwork = await artworkService.update(id, parsed.data);
     return NextResponse.json(artwork);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao atualizar obra" }, { status: 500 });
@@ -51,6 +73,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const session = await requireRole(["admin"]);
+  if (session instanceof NextResponse) return session;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fieldDefinitionService } from "@/services";
+import { requireRole } from "@/lib/api/guard";
 
 export async function GET(request: Request) {
   try {
@@ -13,6 +14,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
   try {
     const body = await request.json();
     const field = await fieldDefinitionService.create(body);
@@ -23,6 +26,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
   try {
     const body = await request.json();
     const { id, ...data } = body;
@@ -34,6 +39,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const session = await requireRole(["admin"]);
+  if (session instanceof NextResponse) return session;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
