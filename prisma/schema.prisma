@@ -27,6 +27,7 @@ model Artist {
   period      String?
   birthDate   DateTime?
   birthPlace  String?
+  customFields Json?
   
   artworks    ArtworkArtist[]
   events      EventParticipant[]
@@ -188,6 +189,7 @@ model Event {
   photos      String[]
   videos      String[]
   press       String[]
+  customFields Json?
   
   artworks    EventArtwork[]
   participants EventParticipant[]
@@ -277,6 +279,7 @@ model Tag {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  password  String
   name      String?
   role      UserRole @default(editor)
   
@@ -311,10 +314,10 @@ enum AccessLevel {
 
 enum EventType {
   festival
-  exposição
+  exposicao @map("exposição")
   performance
   workshop
-  lançamento
+  lancamento @map("lançamento")
   meetup
 }
 
@@ -355,4 +358,38 @@ enum UserRole {
   admin
   editor
   viewer
+}
+
+// ============ CAMPOS CUSTOMIZADOS ============
+
+model FieldDefinition {
+  id          String   @id @default(cuid())
+  entity      String   // "Artwork", "Artist", "Event", "Interview"
+  name        String   // nome interno (slug)
+  label       String   // nome exibido
+  type        FieldType
+  required    Boolean  @default(false)
+  options     Json?    // para select/multi-select: ["op1", "op2"]
+  defaultValue String?
+  order       Int      @default(0)
+  visible     Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([entity, name])
+  @@index([entity])
+}
+
+enum FieldType {
+  text
+  textarea
+  number
+  date
+  datetime
+  boolean
+  select
+  multiselect
+  url
+  email
 }

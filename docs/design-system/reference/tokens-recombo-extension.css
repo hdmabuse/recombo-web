@@ -1,0 +1,23 @@
+/* ============================================================
+   Re:combo · Extensão de Tokens
+   Adicionar ao final de design-system/tokens.css
+   ============================================================ */
+
+:root {
+  /* Cores originais do Re:combo (2002–2008) */
+  --color-recombo-accent: #ff6633; /* laranja — cor primária original */
+  --color-recombo-pink: #ff3366; /* rosa — cor de destaque original */
+  --color-recombo-bg: #1a1a1a; /* fundo escuro do site original */
+
+  /* Uso semântico no contexto do arquivo */
+  --color-archive-highlight: var(--color-recombo-accent);
+  --color-archive-section: var(--color-recombo-pink);
+
+  /* Regra: usar --color-recombo-* APENAS em:
+     - Logo e wordmark Re:combo
+     - Headers de seção do arquivo (Performances, Vídeos, Músicas)
+     - Hover state dos ArchiveItems
+     - Elementos decorativos com referência histórica
+     Todo layout estrutural segue a paleta TRAMA-TAR padrão.
+  */
+}

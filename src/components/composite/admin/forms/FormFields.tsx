@@ -10,37 +10,74 @@ interface TypeSelectorProps {
 }
 
 const TIPO_OPTIONS = [
-  { type: "audio" as ArtworkType, icon: Music, label: "Áudio", desc: "Músicas, faixas, soundscapes" },
-  { type: "video" as ArtworkType, icon: Video, label: "Vídeo", desc: "Performances, clipes, dokumentários" },
-  { type: "image" as ArtworkType, icon: Image, label: "Imagem", desc: "Fotografias, ilustrações, prints" },
-  { type: "text" as ArtworkType, icon: FileText, label: "Texto", desc: "Artigos, ensaios, manifestos" },
-  { type: "installation" as ArtworkType, icon: Wrench, label: "Instalação", desc: "Instalações interativas" },
-  { type: "performance" as ArtworkType, icon: Play, label: "Performance", desc: "Performances ao vivo" },
+  {
+    type: "audio" as ArtworkType,
+    icon: Music,
+    label: "Áudio",
+    desc: "Músicas, faixas, soundscapes",
+  },
+  {
+    type: "video" as ArtworkType,
+    icon: Video,
+    label: "Vídeo",
+    desc: "Performances, clipes, dokumentários",
+  },
+  {
+    type: "image" as ArtworkType,
+    icon: Image,
+    label: "Imagem",
+    desc: "Fotografias, ilustrações, prints",
+  },
+  {
+    type: "text" as ArtworkType,
+    icon: FileText,
+    label: "Texto",
+    desc: "Artigos, ensaios, manifestos",
+  },
+  {
+    type: "installation" as ArtworkType,
+    icon: Wrench,
+    label: "Instalação",
+    desc: "Instalações interativas",
+  },
+  {
+    type: "performance" as ArtworkType,
+    icon: Play,
+    label: "Performance",
+    desc: "Performances ao vivo",
+  },
   { type: "website" as ArtworkType, icon: Globe, label: "Website", desc: "Sites, projetos web" },
-  { type: "software" as ArtworkType, icon: Code, label: "Software", desc: "Programas, ferramentas" },
+  {
+    type: "software" as ArtworkType,
+    icon: Code,
+    label: "Software",
+    desc: "Programas, ferramentas",
+  },
 ];
 
 export function TypeSelector({ value, onChange }: TypeSelectorProps) {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">1. Tipo de Obra</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {TIPO_OPTIONS.map(({ type, icon: Icon, label, desc }) => (
           <button
             key={type}
             type="button"
             onClick={() => onChange(type)}
-            className={`p-4 rounded-lg border-2 text-left transition-all ${
+            className={`rounded-lg border-2 p-4 text-left transition-all ${
               value === type
                 ? "border-zinc-900 bg-zinc-50"
                 : "border-zinc-200 hover:border-zinc-400"
             }`}
           >
-            <Icon className={`w-6 h-6 mb-2 ${value === type ? "text-zinc-900" : "text-zinc-400"}`} />
+            <Icon
+              className={`mb-2 h-6 w-6 ${value === type ? "text-zinc-900" : "text-zinc-400"}`}
+            />
             <div className={`font-medium ${value === type ? "text-zinc-900" : "text-zinc-700"}`}>
               {label}
             </div>
-            <div className="text-xs text-zinc-500 mt-1">{desc}</div>
+            <div className="mt-1 text-xs text-zinc-500">{desc}</div>
           </button>
         ))}
       </div>
@@ -59,23 +96,23 @@ export function BasicInfoForm({ title, year, description, onChange }: BasicInfoF
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">2. Informações Básicas</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
             Título <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => onChange("title", e.target.value)}
-            className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
             placeholder="Nome da obra"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
             Ano <span className="text-red-500">*</span>
           </label>
           <input
@@ -84,21 +121,19 @@ export function BasicInfoForm({ title, year, description, onChange }: BasicInfoF
             onChange={(e) => onChange("year", e.target.value ? parseInt(e.target.value) : null)}
             min={1900}
             max={new Date().getFullYear()}
-            className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
             placeholder="2024"
           />
         </div>
       </div>
-      
+
       <div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1">
-          Descrição
-        </label>
+        <label className="mb-1 block text-sm font-medium text-zinc-700">Descrição</label>
         <textarea
           value={description}
           onChange={(e) => onChange("description", e.target.value)}
           rows={4}
-          className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
           placeholder="Descreva a obra..."
         />
       </div>
@@ -125,64 +160,84 @@ const MEDIUM_OPTIONS: Record<string, string[]> = {
 };
 
 const COMMON_GENRES = [
-  "eletrônica", "experimental", "ambient", "glitch", "noise", "avant-garde",
-  "net.art", "video art", "sound art", "installation art", "performance",
-  "remix", "sampling", "collage", "generative", "interactive",
-  "manguebeat", "brega", "forró", "rock", "hip hop",
+  "eletrônica",
+  "experimental",
+  "ambient",
+  "glitch",
+  "noise",
+  "avant-garde",
+  "net.art",
+  "video art",
+  "sound art",
+  "installation art",
+  "performance",
+  "remix",
+  "sampling",
+  "collage",
+  "generative",
+  "interactive",
+  "manguebeat",
+  "brega",
+  "forró",
+  "rock",
+  "hip hop",
 ];
 
 export function ClassificationForm({ medium, genres, tags, onChange }: ClassificationFormProps) {
   const [customGenre, setCustomGenre] = useState("");
   const [customTag, setCustomTag] = useState("");
-  
+
   const addGenre = () => {
     if (customGenre && !genres.includes(customGenre)) {
       onChange("genres", [...genres, customGenre]);
       setCustomGenre("");
     }
   };
-  
+
   const addTag = () => {
     if (customTag && !tags.includes(customTag)) {
       onChange("tags", [...tags, customTag]);
       setCustomTag("");
     }
   };
-  
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">4. Classificação</h2>
-      
+
       <div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1">
-          Medium
-        </label>
+        <label className="mb-1 block text-sm font-medium text-zinc-700">Medium</label>
         <select
           value={medium}
           onChange={(e) => onChange("medium", e.target.value)}
-          className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
         >
           <option value="">Selecione...</option>
           {COMMON_GENRES.map((g) => (
-            <option key={g} value={g}>{g}</option>
+            <option key={g} value={g}>
+              {g}
+            </option>
           ))}
         </select>
       </div>
-      
+
       <div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1">
-          Gêneros
-        </label>
-        <div className="flex flex-wrap gap-2 mb-2">
+        <label className="mb-1 block text-sm font-medium text-zinc-700">Gêneros</label>
+        <div className="mb-2 flex flex-wrap gap-2">
           {genres.map((g) => (
             <span
               key={g}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 rounded-full text-sm"
+              className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-sm"
             >
               {g}
               <button
                 type="button"
-                onClick={() => onChange("genres", genres.filter((x) => x !== g))}
+                onClick={() =>
+                  onChange(
+                    "genres",
+                    genres.filter((x) => x !== g),
+                  )
+                }
                 className="text-zinc-500 hover:text-zinc-700"
               >
                 ×
@@ -196,13 +251,13 @@ export function ClassificationForm({ medium, genres, tags, onChange }: Classific
             value={customGenre}
             onChange={(e) => setCustomGenre(e.target.value)}
             placeholder="Adicionar gênero..."
-            className="flex-1 px-3 py-2 border border-zinc-300 rounded-md text-sm"
+            className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
             list="genre-options"
           />
           <button
             type="button"
             onClick={addGenre}
-            className="px-4 py-2 bg-zinc-900 text-white rounded-md text-sm"
+            className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white"
           >
             +
           </button>
@@ -213,21 +268,24 @@ export function ClassificationForm({ medium, genres, tags, onChange }: Classific
           ))}
         </datalist>
       </div>
-      
+
       <div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1">
-          Tags
-        </label>
-        <div className="flex flex-wrap gap-2 mb-2">
+        <label className="mb-1 block text-sm font-medium text-zinc-700">Tags</label>
+        <div className="mb-2 flex flex-wrap gap-2">
           {tags.map((t) => (
             <span
               key={t}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 rounded-full text-sm"
+              className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-sm"
             >
               {t}
               <button
                 type="button"
-                onClick={() => onChange("tags", tags.filter((x) => x !== t))}
+                onClick={() =>
+                  onChange(
+                    "tags",
+                    tags.filter((x) => x !== t),
+                  )
+                }
                 className="text-zinc-500 hover:text-zinc-700"
               >
                 ×
@@ -241,12 +299,12 @@ export function ClassificationForm({ medium, genres, tags, onChange }: Classific
             value={customTag}
             onChange={(e) => setCustomTag(e.target.value)}
             placeholder="Adicionar tag..."
-            className="flex-1 px-3 py-2 border border-zinc-300 rounded-md text-sm"
+            className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
           <button
             type="button"
             onClick={addTag}
-            className="px-4 py-2 bg-zinc-900 text-white rounded-md text-sm"
+            className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white"
           >
             +
           </button>
@@ -276,16 +334,16 @@ export function LicenseForm({ license, accessLevel, onChange }: LicenseFormProps
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">6. Licenciamento</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
             Licença <span className="text-red-500">*</span>
           </label>
           <select
             value={license}
             onChange={(e) => onChange("license", e.target.value)}
-            className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             {LICENSE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -294,15 +352,13 @@ export function LicenseForm({ license, accessLevel, onChange }: LicenseFormProps
             ))}
           </select>
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">
-            Acesso
-          </label>
+          <label className="mb-1 block text-sm font-medium text-zinc-700">Acesso</label>
           <select
             value={accessLevel}
             onChange={(e) => onChange("accessLevel", e.target.value)}
-            className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             <option value="public">Público</option>
             <option value="private">Privado</option>

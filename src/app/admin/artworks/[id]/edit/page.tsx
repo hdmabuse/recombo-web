@@ -2,413 +2,432 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { ArtworkType, AccessLevel, ArtworkStatus } from "@prisma/client";
+import { ArtworkType, ArtworkStatus, AccessLevel } from "@prisma/client";
+import { DynamicForm } from "@/components/composite/admin/DynamicForm";
+import { UploadButton } from "@/components/composite/admin/UploadButton";
 
-// Simulated artwork data
-const MOCK_ARTWORK = {
-  id: "1",
-  title: "Call for Noise",
-  slug: "call-for-noise",
-  description: "Performance de 6 horas durante o Abril Pro Rock em 2002, onde membros do coletivo se alternavam dentro de uma \"gaiola\", recebendo convidados em uma performance caótica.",
-  type: "performance" as ArtworkType,
-  year: 2002,
-  medium: "performance ao vivo",
-  genres: ["net.art", "experimental"],
-  tags: ["performance", "abril pro rock", "improvisação"],
-  license: "LUCR",
-  accessLevel: "public" as AccessLevel,
-  status: "published" as ArtworkStatus,
-  artists: [
-    { id: "1", name: "H.D. Mabuse", role: "criador" },
-    { id: "2", name: "Haidée Lima", role: "criador" },
-  ],
-};
-
-interface TabProps {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
+interface Artwork {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  shortDescription: string | null;
+  type: ArtworkType;
+  medium: string | null;
+  genres: string[];
+  year: number | null;
+  yearStart: number | null;
+  yearEnd: number | null;
+  thumbnail: string | null;
+  fileUrl: string | null;
+  fileType: string | null;
+  fileSize: number | null;
+  duration: number | null;
+  dimensions: string | null;
+  license: string;
+  accessLevel: AccessLevel;
+  status: ArtworkStatus;
+  tags: string[];
+  customFields: Record<string, unknown> | null;
 }
 
-function Tab({ active, onClick, children }: TabProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 text-sm font-medium border-b-2 ${
-        active
-          ? "border-zinc-900 text-zinc-900"
-          : "border-transparent text-zinc-500 hover:text-zinc-700"
-      }`}
-    >
-      {children}
-    </button>
-  );
+interface Artist {
+  id: string;
+  name: string;
 }
 
 export default function EditArtworkPage() {
-  const params = useParams();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("geral");
-  
-  const [formData, setFormData] = useState(MOCK_ARTWORK);
-  
-  const updateField = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-  
+  const params = useParams();
+  const [artwork, setArtwork] = useState<Artwork | null>(null);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, unknown>>({});
+
+  const [form, setForm] = useState({
+    title: "",
+    slug: "",
+    description: "",
+    shortDescription: "",
+    type: "image" as ArtworkType,
+    medium: "",
+    genres: "",
+    year: "",
+    thumbnail: "",
+    fileUrl: "",
+    license: "LUCR",
+    accessLevel: "public" as AccessLevel,
+    status: "draft" as ArtworkStatus,
+    tags: "",
+    artistIds: [] as string[],
+    artistRoles: [] as string[],
+  });
+
+  useEffect(() => {
+    async function fetchData() {
+      const [artworkRes, artistsRes] = await Promise.all([
+        fetch(`/api/admin/artworks?id=${params.id}`),
+        fetch("/api/admin/artists"),
+      ]);
+
+      if (!artworkRes.ok) {
+        router.push("/admin/artworks");
+        return;
+      }
+
+      const artworkData = await artworkRes.json();
+      const artistsData = await artistsRes.json();
+
+      setArtwork(artworkData);
+      setArtists(artistsData);
+
+      setForm({
+        title: artworkData.title || "",
+        slug: artworkData.slug || "",
+        description: artworkData.description || "",
+        shortDescription: artworkData.shortDescription || "",
+        type: artworkData.type || "image",
+        medium: artworkData.medium || "",
+        genres: (artworkData.genres || []).join(", "),
+        year: artworkData.year?.toString() || "",
+        thumbnail: artworkData.thumbnail || "",
+        fileUrl: artworkData.fileUrl || "",
+        license: artworkData.license || "LUCR",
+        accessLevel: artworkData.accessLevel || "public",
+        status: artworkData.status || "draft",
+        tags: (artworkData.tags || []).join(", "),
+        artistIds: artworkData.artists?.map((a: { artistId: string }) => a.artistId) || [],
+        artistRoles: artworkData.artists?.map((a: { role: string }) => a.role || "criador") || [],
+      });
+
+      if (artworkData.customFields) {
+        setCustomFieldsValues(artworkData.customFields);
+      }
+
+      setLoading(false);
+    }
+    fetchData();
+  }, [params.id, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    alert("Obra atualizada com sucesso!");
-    setIsLoading(false);
-    router.push("/admin/artworks");
+    setSaving(true);
+
+    const payload = {
+      id: params.id,
+      ...form,
+      year: form.year ? parseInt(form.year) : null,
+      genres: form.genres ? form.genres.split(",").map((g) => g.trim()) : [],
+      tags: form.tags ? form.tags.split(",").map((t) => t.trim()) : [],
+      customFields: customFieldsValues,
+      artists: form.artistIds.map((id, i) => ({
+        artistId: id,
+        role: form.artistRoles[i] || "criador",
+      })),
+    };
+
+    const res = await fetch("/api/admin/artworks", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      router.push("/admin/artworks");
+    } else {
+      alert("Erro ao atualizar obra");
+      setSaving(false);
+    }
   };
-  
+
+  if (loading) return <div>Carregando...</div>;
+  if (!artwork) return null;
+
   return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Header */}
-      <div className="bg-white border-b border-zinc-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/admin/artworks"
-                className="p-2 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-md"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-zinc-900">Editar: {formData.title}</h1>
-                <p className="text-sm text-zinc-500 mt-1">
-                  Última atualização: 15/01/2025
-                </p>
-              </div>
+    <div className="mx-auto max-w-4xl">
+      <h1 className="mb-6 text-2xl font-bold text-zinc-900">Editar Obra</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-md border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900">Informações Básicas</h2>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Título *</label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                required
+              />
             </div>
-            <div className="flex gap-2">
-              <Link
-                href={`/obra/${formData.slug}`}
-                target="_blank"
-                className="px-4 py-2 border border-zinc-300 rounded-md text-zinc-700 hover:bg-zinc-50"
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Slug</label>
+              <input
+                type="text"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-zinc-700">Descrição Curta</label>
+            <input
+              type="text"
+              value={form.shortDescription}
+              onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Descrição Completa
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={4}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
+          </div>
+        </div>
+
+        <div className="rounded-md border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900">Classificação</h2>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Tipo</label>
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value as ArtworkType })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
-                Ver
-              </Link>
-              <button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-md hover:bg-zinc-800 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Salvar
-                  </>
-                )}
-              </button>
+                <option value="image">Imagem</option>
+                <option value="video">Vídeo</option>
+                <option value="audio">Áudio</option>
+                <option value="text">Texto</option>
+                <option value="installation">Instalação</option>
+                <option value="performance">Performance</option>
+                <option value="website">Website</option>
+                <option value="software">Software</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Técnica/Meio</label>
+              <input
+                type="text"
+                value={form.medium}
+                onChange={(e) => setForm({ ...form, medium: e.target.value })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Ano</label>
+              <input
+                type="number"
+                value={form.year}
+                onChange={(e) => setForm({ ...form, year: e.target.value })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Gêneros (separados por vírgula)
+            </label>
+            <input
+              type="text"
+              value={form.genres}
+              onChange={(e) => setForm({ ...form, genres: e.target.value })}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
+          </div>
+        </div>
+
+        <div className="rounded-md border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900">Arquivos e Mídia</h2>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">
+                Thumbnail (URL ou upload)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={form.thumbnail}
+                  onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
+                  className="flex-1 rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  placeholder="https://..."
+                />
+                <UploadButton
+                  onUpload={(url) => setForm({ ...form, thumbnail: url })}
+                  accept="image/*"
+                />
+              </div>
+              {form.thumbnail && (
+                <div className="mt-2">
+                  <img
+                    src={form.thumbnail}
+                    alt="Thumbnail preview"
+                    className="h-32 w-32 rounded object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">
+                Arquivo Principal (URL ou upload)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={form.fileUrl}
+                  onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
+                  className="flex-1 rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  placeholder="https://..."
+                />
+                <UploadButton
+                  onUpload={(url) => setForm({ ...form, fileUrl: url })}
+                  accept="image/*,audio/*,video/*"
+                />
+              </div>
+              {form.fileUrl && (
+                <p className="mt-2 truncate text-sm text-zinc-500">{form.fileUrl}</p>
+              )}
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* Tabs */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-b border-zinc-200 bg-white">
-        <div className="flex gap-2">
-          <Tab active={activeTab === "geral"} onClick={() => setActiveTab("geral")}>
-            Geral
-          </Tab>
-          <Tab active={activeTab === "arquivo"} onClick={() => setActiveTab("arquivo")}>
-            Arquivo
-          </Tab>
-          <Tab active={activeTab === "classificacao"} onClick={() => setActiveTab("classificacao")}>
-            Classificação
-          </Tab>
-          <Tab active={activeTab === "vinculos"} onClick={() => setActiveTab("vinculos")}>
-            Vínculos
-          </Tab>
-          <Tab active={activeTab === "licenca"} onClick={() => setActiveTab("licenca")}>
-            Licença
-          </Tab>
-        </div>
-      </div>
-      
-      {/* Form Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit}>
-          {activeTab === "geral" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Título
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => updateField("title", e.target.value)}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Slug
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => updateField("slug", e.target.value)}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md bg-zinc-50"
-                    disabled
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Descrição
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => updateField("description", e.target.value)}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Tipo
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => updateField("type", e.target.value)}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  >
-                    <option value="audio">Áudio</option>
-                    <option value="video">Vídeo</option>
-                    <option value="image">Imagem</option>
-                    <option value="text">Texto</option>
-                    <option value="installation">Instalação</option>
-                    <option value="performance">Performance</option>
-                    <option value="website">Website</option>
-                    <option value="software">Software</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Ano
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.year}
-                    onChange={(e) => updateField("year", parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => updateField("status", e.target.value)}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  >
-                    <option value="draft">Rascunho</option>
-                    <option value="published">Publicado</option>
-                    <option value="archived">Arquivado</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === "arquivo" && (
-            <div className="space-y-6">
-              <div className="border-2 border-dashed border-zinc-300 rounded-lg p-12 text-center">
-                <p className="text-zinc-500">Nenhum arquivouploadado</p>
-                <button
-                  type="button"
-                  className="mt-4 px-4 py-2 bg-zinc-900 text-white rounded-md"
-                >
-                  Enviar Arquivo
-                </button>
-              </div>
-              
-              <div className="bg-zinc-50 rounded-lg p-4">
-                <h3 className="font-medium text-zinc-700 mb-3">Arquivos Adicionais</h3>
-                <p className="text-sm text-zinc-500">Nenhum arquivo adicional</p>
-                <button
-                  type="button"
-                  className="mt-2 text-sm text-zinc-700 hover:underline"
-                >
-                  + Adicionar arquivo
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === "classificacao" && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Medium
-                </label>
-                <input
-                  type="text"
-                  value={formData.medium}
-                  onChange={(e) => updateField("medium", e.target.value)}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  placeholder="ex: performance ao vivo, vídeo digital"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                  Gêneros
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.genres.map((g) => (
-                    <span
-                      key={g}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 rounded-full text-sm"
-                    >
-                      {g}
-                      <button
-                        type="button"
-                        onClick={() => updateField("genres", formData.genres.filter((x) => x !== g))}
-                        className="text-zinc-500 hover:text-zinc-700"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                  Tags
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 rounded-full text-sm"
-                    >
-                      {t}
-                      <button
-                        type="button"
-                        onClick={() => updateField("tags", formData.tags.filter((x) => x !== t))}
-                        className="text-zinc-500 hover:text-zinc-700"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === "vinculos" && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                  Artistas Vinculados
-                </label>
-                {formData.artists.map((artist, index) => (
+
+        <div className="rounded-md border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900">Artistas</h2>
+
+          {artists.length > 0 ? (
+            <div className="space-y-2">
+              {artists.map((artist) => {
+                const idx = form.artistIds.indexOf(artist.id);
+                return (
                   <div
                     key={artist.id}
-                    className="flex items-center gap-2 mb-2 p-2 bg-zinc-50 rounded"
+                    className="flex items-center gap-3 rounded p-2 hover:bg-zinc-50"
                   >
-                    <span className="text-sm flex-1">{artist.name}</span>
-                    <select
-                      value={artist.role}
+                    <input
+                      type="checkbox"
+                      checked={idx !== -1}
                       onChange={(e) => {
-                        const newArtists = [...formData.artists];
-                        newArtists[index].role = e.target.value;
-                        updateField("artists", newArtists);
+                        if (e.target.checked) {
+                          setForm({
+                            ...form,
+                            artistIds: [...form.artistIds, artist.id],
+                            artistRoles: [...form.artistRoles, "criador"],
+                          });
+                        } else {
+                          setForm({
+                            ...form,
+                            artistIds: form.artistIds.filter((id) => id !== artist.id),
+                            artistRoles: form.artistRoles.filter((_, i) => i !== idx),
+                          });
+                        }
                       }}
-                      className="text-sm px-2 py-1 border border-zinc-300 rounded"
-                    >
-                      <option value="criador">Criador</option>
-                      <option value="colaborador">Colaborador</option>
-                      <option value="participante">Participante</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateField(
-                          "artists",
-                          formData.artists.filter((_, i) => i !== index)
-                        )
-                      }
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
+                      className="rounded"
+                    />
+                    <span className="flex-1 text-sm text-zinc-700">{artist.name}</span>
                   </div>
-                ))}
-                <button
-                  type="button"
-                  className="text-sm text-zinc-700 hover:underline"
-                >
-                  + Adicionar artista
-                </button>
-              </div>
+                );
+              })}
             </div>
+          ) : (
+            <p className="text-sm text-zinc-500">Nenhum artista cadastrado.</p>
           )}
-          
-          {activeTab === "licenca" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Licença
-                  </label>
-                  <select
-                    value={formData.license}
-                    onChange={(e) => updateField("license", e.target.value)}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  >
-                    <option value="LUCR">LUCR - Licença de Uso Completo Re:combo</option>
-                    <option value="CC-BY">CC BY - Atribuição</option>
-                    <option value="CC-BY-SA">CC BY-SA - Atribuição-Similar</option>
-                    <option value="CC-BY-NC">CC BY-NC - Atribuição-NãoComercial</option>
-                    <option value="CC0">CC0 - Domínio Público</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Nível de Acesso
-                  </label>
-                  <select
-                    value={formData.accessLevel}
-                    onChange={(e) => updateField("accessLevel", e.target.value)}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-md"
-                  >
-                    <option value="public">Público</option>
-                    <option value="private">Privado</option>
-                    <option value="restricted">Restrito</option>
-                  </select>
-                </div>
-              </div>
+        </div>
+
+        <div className="rounded-md border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900">Publicação</h2>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Status</label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value as ArtworkStatus })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              >
+                <option value="draft">Rascunho</option>
+                <option value="published">Publicado</option>
+                <option value="archived">Arquivado</option>
+              </select>
             </div>
-          )}
-        </form>
-      </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Licença</label>
+              <select
+                value={form.license}
+                onChange={(e) => setForm({ ...form, license: e.target.value })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              >
+                <option value="LUCR">Todos os direitos reservados</option>
+                <option value="CC0">Domínio público</option>
+                <option value="CCBY">CC BY</option>
+                <option value="CCBYSA">CC BY-SA</option>
+                <option value="CCBYNC">CC BY-NC</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">Acesso</label>
+              <select
+                value={form.accessLevel}
+                onChange={(e) => setForm({ ...form, accessLevel: e.target.value as AccessLevel })}
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              >
+                <option value="public">Público</option>
+                <option value="private">Privado</option>
+                <option value="restricted">Restrito</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Tags (separadas por vírgula)
+            </label>
+            <input
+              type="text"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
+          </div>
+        </div>
+
+        <DynamicForm
+          entity="Artwork"
+          values={customFieldsValues}
+          onChange={setCustomFieldsValues}
+        />
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-white transition-colors hover:bg-zinc-800 disabled:opacity-50"
+          >
+            {saving ? "Salvando..." : "Salvar Alterações"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/admin/artworks")}
+            className="rounded-md border border-zinc-300 px-4 py-2 text-zinc-700 transition-colors hover:bg-zinc-50"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

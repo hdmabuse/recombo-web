@@ -39,31 +39,31 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-zinc-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-zinc-900 flex items-center justify-center rounded-md">
-              <span className="text-white font-mono font-bold text-lg">R</span>
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-500">
+              <span className="font-mono text-lg font-bold text-black">R</span>
             </div>
             <div className="hidden sm:block">
-              <span className="text-xl font-bold tracking-tight text-zinc-900 group-hover:text-zinc-700 transition-colors">
+              <span className="text-xl font-bold tracking-tight text-zinc-900 transition-colors group-hover:text-zinc-700">
                 re:combo
               </span>
-              <span className="hidden lg:inline text-xs text-zinc-500 ml-2">
+              <span className="ml-2 hidden text-xs text-zinc-500 lg:inline">
                 o arquivo como semente
               </span>
             </div>
           </Link>
 
           {/* Navigation - Desktop */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden items-center gap-1 lg:flex">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+                className="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
               >
                 {item.label}
               </Link>
@@ -74,10 +74,10 @@ export function Header() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+              className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
               aria-label="Buscar"
             >
-              <Search className="w-5 h-5" />
+              <Search className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -90,22 +90,22 @@ export function Header() {
                 type="text"
                 name="q"
                 placeholder="Buscar no acervo..."
-                className="w-full px-4 py-2 pl-10 bg-zinc-50 border border-zinc-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                className="w-full rounded-md border border-zinc-200 bg-zinc-50 px-4 py-2 pl-10 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 autoFocus
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             </div>
           </form>
         )}
 
         {/* Tags Bar */}
-        <div className="flex items-center gap-2 pb-3 overflow-x-auto scrollbar-hide">
-          <span className="text-xs font-medium text-zinc-400 shrink-0">Tags:</span>
+        <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-3">
+          <span className="shrink-0 text-xs font-medium text-zinc-400">Tags:</span>
           {FEATURED_TAGS.map((tag) => (
             <Link
               key={tag}
               href={`/arquivo?tag=${encodeURIComponent(tag)}`}
-              className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-zinc-100 text-zinc-700 hover:bg-zinc-200 transition-colors shrink-0"
+              className="inline-flex shrink-0 items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200"
             >
               {tag}
             </Link>

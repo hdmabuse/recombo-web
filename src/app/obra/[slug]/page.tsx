@@ -1,93 +1,80 @@
 import Link from "next/link";
-import { ChevronLeft, Play, Pause, Volume2, Calendar, MapPin, Users, FileText, Tag, ExternalLink } from "lucide-react";
+import { Play, Calendar, MapPin, Users, FileText, Tag, ExternalLink, Volume2 } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
-const MOCK_ARTWORK = {
-  slug: "call-for-noise",
-  title: "Call for Noise",
-  description: "Performance de 6 horas durante o Abril Pro Rock em 2002, onde membros do coletivo se alternavam dentro de uma \"gaiola\", recebendo convidados em uma performance caótica, alimentada por imagens solicitadas por uma Chamada de Ruídos e enviadas previamente de várias partes do mundo.",
-  year: 2002,
-  type: "performance",
-  medium: "Performance + Net.art",
-  location: "Centro de Convenções de Pernambuco, Recife",
-  duration: 360, // minutes
-  license: "LUCR",
-  tags: ["performance", "net.art", "abril pro rock", "chamada de ruídos", "improvisação"],
-  artists: [
-    { name: "H.D. Mabuse", role: "criador" },
-    { name: "Haidée Lima", role: "criador" },
-    { name: "Queops Negronski", role: "criador" },
-  ],
-  related: [
-    { title: "Chamada de Ruídos", slug: "chamada-de-ruidos", year: 2002 },
-    { title: "Rádio Re:combo", slug: "radio-recombo", year: 2004 },
-  ],
-  files: [
-    { type: "video", url: "#", label: "Registro em vídeo" },
-    { type: "audio", url: "#", label: "Trilha sonora" },
-    { type: "image", url: "#", label: "Fotografias" },
-  ],
-  events: [
-    { name: "Abril Pro Rock 2002", date: "2002-04", slug: "abril-pro-rock-2002" },
-  ],
-};
+export const dynamic = "force-dynamic";
 
-export default function ArtworkPage({ params }: { params: { slug: string } }) {
-  const artwork = MOCK_ARTWORK;
+interface Props {
+  params: { slug: string };
+}
 
-  return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-zinc-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link
-            href="/arquivo"
-            className="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
-          >
-            <ChevronLeft className="w-4 h-4" />
+export default async function ArtworkPage({ params }: Props) {
+  const artwork = await prisma.artwork.findUnique({
+    where: { slug: params.slug },
+    include: {
+      artists: { include: { artist: true } },
+      events: { include: { event: true } },
+      files: true,
+      related: { include: { related: { select: { slug: true, title: true, year: true } } } },
+    },
+  });
+
+  if (!artwork) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+        <div className="text-center">
+          <h1 className="mb-2 text-2xl font-bold text-zinc-900">Obra não encontrada</h1>
+          <Link href="/arquivo" className="text-amber-600 hover:underline">
             Voltar ao acervo
           </Link>
         </div>
       </div>
+    );
+  }
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Player / Preview */}
-            <div className="aspect-video bg-zinc-900 rounded-lg relative overflow-hidden flex items-center justify-center">
+  return (
+    <div className="min-h-screen bg-zinc-50">
+      <div className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <Link
+            href="/arquivo"
+            className="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+          >
+            ← Voltar ao acervo
+          </Link>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-8 lg:col-span-2">
+            <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-zinc-900">
               <div className="text-center">
-                <Play className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
-                <p className="text-zinc-400 text-sm">
-                  Clique para reproduzir
-                </p>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
-                <div className="h-full bg-zinc-400 w-1/3" />
+                <Play className="mx-auto mb-4 h-16 w-16 text-zinc-500" />
+                <p className="text-sm text-zinc-400">Clique para reproduzir</p>
               </div>
             </div>
 
-            {/* Description */}
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900 mb-4">{artwork.title}</h1>
-              <p className="text-zinc-600 leading-relaxed">{artwork.description}</p>
+              <h1 className="mb-4 text-3xl font-bold text-zinc-900">{artwork.title}</h1>
+              <p className="leading-relaxed text-zinc-600">{artwork.description}</p>
             </div>
 
-            {/* Files */}
             {artwork.files.length > 0 && (
-              <div className="bg-white rounded-lg border border-zinc-200 p-6">
-                <h2 className="font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+              <div className="rounded-lg border border-zinc-200 bg-white p-6">
+                <h2 className="mb-4 flex items-center gap-2 font-semibold text-zinc-900">
+                  <FileText className="h-5 w-5" />
                   Arquivos
                 </h2>
                 <div className="space-y-2">
-                  {artwork.files.map((file, index) => (
+                  {artwork.files.map((file) => (
                     <a
-                      key={index}
+                      key={file.id}
                       href={file.url}
-                      className="flex items-center justify-between p-3 bg-zinc-50 rounded-md hover:bg-zinc-100 transition-colors"
+                      className="flex items-center justify-between rounded-md bg-zinc-50 p-3 transition-colors hover:bg-zinc-100"
                     >
-                      <span className="text-sm text-zinc-700">{file.label}</span>
-                      <ExternalLink className="w-4 h-4 text-zinc-400" />
+                      <span className="text-sm text-zinc-700">{file.filename}</span>
+                      <ExternalLink className="h-4 w-4 text-zinc-400" />
                     </a>
                   ))}
                 </div>
@@ -95,39 +82,27 @@ export default function ArtworkPage({ params }: { params: { slug: string } }) {
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Meta Info */}
-            <div className="bg-white rounded-lg border border-zinc-200 p-6 space-y-4">
+            <div className="space-y-4 rounded-lg border border-zinc-200 bg-white p-6">
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-zinc-400" />
+                <Calendar className="h-5 w-5 text-zinc-400" />
                 <div>
                   <p className="text-xs text-zinc-500">Ano</p>
-                  <p className="font-medium text-zinc-900">{artwork.year}</p>
+                  <p className="font-medium text-zinc-900">{artwork.year || "—"}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Tag className="w-5 h-5 text-zinc-400" />
+                <Tag className="h-5 w-5 text-zinc-400" />
                 <div>
                   <p className="text-xs text-zinc-500">Tipo</p>
-                  <p className="font-medium text-zinc-900 capitalize">{artwork.type}</p>
+                  <p className="font-medium capitalize text-zinc-900">{artwork.type}</p>
                 </div>
               </div>
-
-              {artwork.location && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-zinc-400" />
-                  <div>
-                    <p className="text-xs text-zinc-500">Local</p>
-                    <p className="font-medium text-zinc-900">{artwork.location}</p>
-                  </div>
-                </div>
-              )}
 
               {artwork.duration && (
                 <div className="flex items-center gap-3">
-                  <Volume2 className="w-5 h-5 text-zinc-400" />
+                  <Volume2 className="h-5 w-5 text-zinc-400" />
                   <div>
                     <p className="text-xs text-zinc-500">Duração</p>
                     <p className="font-medium text-zinc-900">
@@ -138,73 +113,63 @@ export default function ArtworkPage({ params }: { params: { slug: string } }) {
               )}
             </div>
 
-            {/* Artists */}
-            <div className="bg-white rounded-lg border border-zinc-200 p-6">
-              <h2 className="font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Artistas
-              </h2>
-              <div className="space-y-3">
-                {artwork.artists.map((artist, index) => (
-                  <Link
-                    key={index}
-                    href={`/artista/${artist.name.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="flex items-center justify-between group"
-                  >
-                    <span className="text-sm text-zinc-700 group-hover:text-zinc-900">
-                      {artist.name}
-                    </span>
-                    <span className="text-xs text-zinc-500">{artist.role}</span>
-                  </Link>
-                ))}
+            {artwork.artists.length > 0 && (
+              <div className="rounded-lg border border-zinc-200 bg-white p-6">
+                <h2 className="mb-4 flex items-center gap-2 font-semibold text-zinc-900">
+                  <Users className="h-5 w-5" />
+                  Artistas
+                </h2>
+                <div className="space-y-3">
+                  {artwork.artists.map((aa) => (
+                    <div key={aa.id} className="flex items-center justify-between">
+                      <span className="text-sm text-zinc-700">{aa.artist.name}</span>
+                      {aa.role && <span className="text-xs text-zinc-500">{aa.role}</span>}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Tags */}
-            <div className="bg-white rounded-lg border border-zinc-200 p-6">
-              <h2 className="font-semibold text-zinc-900 mb-4">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {artwork.tags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/arquivo?tag=${tag}`}
-                    className="px-2 py-1 text-xs bg-zinc-100 text-zinc-700 rounded-full hover:bg-zinc-200"
-                  >
-                    {tag}
-                  </Link>
-                ))}
+            {artwork.tags.length > 0 && (
+              <div className="rounded-lg border border-zinc-200 bg-white p-6">
+                <h2 className="mb-4 font-semibold text-zinc-900">Tags</h2>
+                <div className="flex flex-wrap gap-2">
+                  {artwork.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/arquivo?tag=${tag}`}
+                      className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-200"
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* License */}
-            <div className="bg-zinc-900 rounded-lg p-6 text-white">
-              <h2 className="font-semibold mb-2">Licença</h2>
-              <p className="text-sm text-zinc-400 mb-3">
-                Esta obra está disponível sob a Licença de Uso Completo Re:combo (LUCR)
+            <div className="rounded-lg bg-zinc-900 p-6 text-white">
+              <h2 className="mb-2 font-semibold">Licença</h2>
+              <p className="mb-3 text-sm text-zinc-400">
+                {artwork.license === "LUCR"
+                  ? "Esta obra está disponível sob a Licença de Uso Completo Re:combo (LUCR)"
+                  : `Licenciado sob ${artwork.license}`}
               </p>
-              <a
-                href="#"
-                className="text-sm text-zinc-300 hover:text-white underline"
-              >
-                Ver termos da licença
-              </a>
             </div>
           </div>
         </div>
 
-        {/* Related Works */}
         {artwork.related.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-xl font-bold text-zinc-900 mb-6">Obras Relacionadas</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {artwork.related.map((related) => (
+            <h2 className="mb-6 text-xl font-bold text-zinc-900">Obras Relacionadas</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {artwork.related.map((rel) => (
                 <Link
-                  key={related.slug}
-                  href={`/obra/${related.slug}`}
-                  className="bg-white rounded-lg border border-zinc-200 p-4 hover:border-zinc-900 transition-colors"
+                  key={rel.id}
+                  href={`/obra/${rel.related.slug}`}
+                  className="rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-900"
                 >
-                  <p className="font-medium text-zinc-900">{related.title}</p>
-                  <p className="text-sm text-zinc-500">{related.year}</p>
+                  <p className="font-medium text-zinc-900">{rel.related.title}</p>
+                  <p className="text-sm text-zinc-500">{rel.related.year}</p>
                 </Link>
               ))}
             </div>

@@ -4,7 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
@@ -16,7 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "RE:COMBO - O arquivo como semente",
-  description: "Arquivo digital do coletivo Re:combo (2001-2008). Pioneirismo em produção artística colaborativa via internet.",
+  description:
+    "Arquivo digital do coletivo Re:combo (2001-2008). Pioneirismo em produção artística colaborativa via internet.",
   keywords: ["Re:combo", "Manguebeat", "Net.art", "Arte digital", "Coletivo", "Recife"],
   authors: [{ name: "RE:COMBO" }],
   openGraph: {
@@ -33,11 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="min-h-screen flex flex-col bg-zinc-50 text-zinc-900 antialiased">
+      <body className="flex min-h-screen flex-col bg-zinc-50 text-zinc-900 antialiased">
         <Header />
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>

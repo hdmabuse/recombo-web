@@ -48,3 +48,17 @@ prisma/migrations/
 *.png
 *.pdf
 mockup-navegavel-*.html
+*storybook.log
+storybook-static
+
+# Scratch / AI session dumps / tooling
+*.save
+*.tar.gz
+session-*.md
+OpenDesign_session-*.md
+.opencode/
+venv/
+.venv/
+
+# Open Design — projeto/ferramenta separada (repo próprio, serviço na 7456)
+open-design/
