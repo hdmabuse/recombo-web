@@ -113,6 +113,7 @@ model Artwork {
   related     ArtworkRelation[] @relation("related")
   relationOf  ArtworkRelation[] @relation("relationOf")
   files       ArtworkFile[]
+  captures    Capture[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -392,4 +393,37 @@ enum FieldType {
   multiselect
   url
   email
+}
+// ============ CAPTURAS WEB (ArchiveBox) ============
+
+model Capture {
+  id          String   @id @default(cuid())
+  snapshotId  String   @unique
+  url         String   @db.Text
+  title       String?
+  note        String?  @db.Text
+  tags        String[]
+  capturedAt  DateTime?
+
+  status      CaptureStatus @default(inbox)
+  accessLevel AccessLevel   @default(restricted)
+  license     String        @default("LUCR")
+  highlight   Boolean       @default(false)
+
+  artworkId   String?
+  artwork     Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([accessLevel])
+  @@index([artworkId])
+}
+
+enum CaptureStatus {
+  inbox
+  selected
+  published
+  rejected
 }

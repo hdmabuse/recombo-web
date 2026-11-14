@@ -13,11 +13,13 @@ import {
   Database,
   ChevronDown,
   FolderOpen,
+  Archive,
 } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/captures", label: "Capturas", icon: Archive },
   { href: "/admin/artworks", label: "Obras", icon: Image },
   { href: "/admin/artists", label: "Artistas", icon: Users },
   { href: "/admin/events", label: "Eventos", icon: Calendar },
