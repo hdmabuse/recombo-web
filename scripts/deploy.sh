@@ -7,6 +7,7 @@ SHA="${1:?uso: deploy.sh <commit-sha>}"
 APP_DIR="${APP_DIR:-/opt/recombo-web}"
 BRANCH="${DEPLOY_BRANCH:-feature/open-design-layout}"
 LOG_FILE="${LOG_FILE:-/var/log/recombo-deploy.log}"
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3005/}"
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 
@@ -47,10 +48,10 @@ fi
 
 log "Healthcheck"
 sleep 3
-if curl -fsS -o /dev/null --max-time 10 http://127.0.0.1:3000/; then
+if curl -fsS -o /dev/null --max-time 10 "$HEALTH_URL"; then
   log "OK: deploy de $SHA concluído"
 else
-  echo "ERRO: aplicação não respondeu em :3000"
+  echo "ERRO: aplicação não respondeu em $HEALTH_URL"
   pm2 logs recombo-web --lines 30 --nostream || true
   exit 1
 fi
