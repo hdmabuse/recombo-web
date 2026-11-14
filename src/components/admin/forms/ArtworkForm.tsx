@@ -48,8 +48,8 @@ export function ArtworkForm({ artwork, onSubmit, isLoading }: ArtworkFormProps) 
   const [formData, setFormData] = useState<ArtworkFormData>(artwork || initialFormData);
   const router = useRouter();
   
-  const updateField = (field: keyof ArtworkFormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const updateField = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value } as ArtworkFormData));
   };
   
   const handleSubmit = async (e: React.FormEvent) => {

@@ -107,7 +107,7 @@ const TIMELINE_EVENTS = [
 export default function TimelinePage() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   
-  const years = [...new Set(TIMELINE_EVENTS.map(e => e.year))];
+  const years = Array.from(new Set(TIMELINE_EVENTS.map(e => e.year)));
   const selectedEvent = selectedYear 
     ? TIMELINE_EVENTS.find(e => e.year === selectedYear)
     : null;

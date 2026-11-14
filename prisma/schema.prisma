@@ -112,6 +112,7 @@ model Artwork {
   related     ArtworkRelation[] @relation("related")
   relationOf  ArtworkRelation[] @relation("relationOf")
   files       ArtworkFile[]
+  captures    Capture[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -311,10 +312,10 @@ enum AccessLevel {
 
 enum EventType {
   festival
-  exposição
+  exposicao
   performance
   workshop
-  lançamento
+  lancamento
   meetup
 }
 
@@ -355,4 +356,44 @@ enum UserRole {
   admin
   editor
   viewer
+}
+
+// ============ CAPTURAS (ArchiveBox) ============
+
+// Uma captura web feita pelo ArchiveBox, com decisão de curadoria associada.
+// A prova documental vive no ArchiveBox; aqui ficam apenas seleção, nota e
+// regras de publicação. O snapshotId é a chave que liga os dois mundos.
+model Capture {
+  id          String   @id @default(cuid())
+  snapshotId  String   @unique   // UUID do snapshot no ArchiveBox
+  url         String   @db.Text
+  title       String?
+  note        String?  @db.Text  // anotação de curadoria
+
+  tags        String[]
+  capturedAt  DateTime?
+
+  // Decisão editorial
+  status      CaptureStatus  @default(inbox)
+  accessLevel AccessLevel    @default(restricted)
+  license     String         @default("LUCR")
+  highlight   Boolean        @default(false) // aparece em destaque na home
+
+  // Vínculo opcional com uma obra do acervo
+  artworkId   String?
+  artwork     Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([accessLevel])
+  @@index([artworkId])
+}
+
+enum CaptureStatus {
+  inbox       // capturada, ainda não olhada
+  selected    // escolhida para o acervo
+  published   // visível publicamente
+  rejected    // descartada
 }

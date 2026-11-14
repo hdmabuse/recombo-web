@@ -10,11 +10,13 @@ import {
   Tags, 
   Settings,
   Database,
-  Upload
+  Upload,
+  Archive
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/captures", label: "Capturas", icon: Archive },
   { href: "/admin/artworks", label: "Obras", icon: FileAudio },
   { href: "/admin/artists", label: "Artistas", icon: Users },
   { href: "/admin/events", label: "Eventos", icon: Calendar },
