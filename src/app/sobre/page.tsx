@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Music, Globe, Users, Heart, Lightbulb } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Sobre · Re:combo",
+  description:
+    "A história do coletivo Re:combo: origem em 2001 no Recife, generosidade intelectual, LUCR e o projeto de arquivo digital.",
+};
 
 export default function SobrePage() {
   return (
