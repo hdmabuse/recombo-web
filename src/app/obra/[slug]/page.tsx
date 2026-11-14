@@ -8,6 +8,28 @@ interface Props {
   params: { slug: string };
 }
 
+export async function generateMetadata({ params }: Props) {
+  const artwork = await prisma.artwork.findUnique({
+    where: { slug: params.slug },
+    select: { title: true, year: true, description: true, thumbnail: true },
+  });
+
+  if (!artwork) return { title: "Obra não encontrada · Re:combo" };
+
+  const description = artwork.description?.replace(/\s+/g, " ").slice(0, 160) || undefined;
+
+  return {
+    title: `${artwork.title}${artwork.year ? ` (${artwork.year})` : ""} · Re:combo`,
+    description,
+    openGraph: {
+      title: `${artwork.title} · Re:combo`,
+      description,
+      images: artwork.thumbnail ? [artwork.thumbnail] : undefined,
+      type: "article" as const,
+    },
+  };
+}
+
 export default async function ArtworkPage({ params }: Props) {
   const artwork = await prisma.artwork.findUnique({
     where: { slug: params.slug },
