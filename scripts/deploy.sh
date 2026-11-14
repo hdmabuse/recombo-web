@@ -13,6 +13,11 @@ APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 
+# guarda tudo em deploy.log para auditoria via SSH
+LOG_FILE="${APP_DIR}/deploy.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+printf '\n===== %s | deploy %s =====\n' "$(date -Is)" "$SHA" >> "$LOG_FILE"
+
 cd "$APP_DIR"
 
 log "Deploy $SHA em $APP_DIR"
