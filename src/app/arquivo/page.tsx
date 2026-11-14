@@ -1,83 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Filter, Music, Video, Image, FileText, X } from "lucide-react";
 
-const MOCK_ARTWORKS = [
-  {
-    id: "1",
-    slug: "call-for-noise",
-    title: "Call for Noise",
-    year: 2002,
-    type: "performance",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }],
-  },
-  {
-    id: "2",
-    slug: "radio-recombo",
-    title: "Rádio Re:combo",
-    year: 2004,
-    type: "audio",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "H.D. Mabuse" }, { name: "Haidée Lima" }],
-  },
-  {
-    id: "3",
-    slug: "constelacoes",
-    title: "Constelações",
-    year: 2004,
-    type: "image",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }],
-  },
-  {
-    id: "4",
-    slug: "mundo-pequeno",
-    title: "Mundo Pequeno",
-    year: 2006,
-    type: "installation",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }],
-  },
-  {
-    id: "5",
-    slug: "pause-and-play",
-    title: "Pause and Play",
-    year: 2004,
-    type: "performance",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }],
-  },
-  {
-    id: "6",
-    slug: "transloc-mixer",
-    title: "Transloc Mixer",
-    year: 2003,
-    type: "audio",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }],
-  },
-  {
-    id: "7",
-    slug: "arte-eletronica",
-    title: "Arte Eletrônica",
-    year: 2003,
-    type: "video",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }, { name: "Retinantz" }],
-  },
-  {
-    id: "8",
-    slug: "chamada-de-ruidos",
-    title: "Chamada de Ruídos",
-    year: 2002,
-    type: "performance",
-    thumbnail: "/placeholder.jpg",
-    artists: [{ name: "Coletivo Re:combo" }],
-  },
-];
+type ArtworkCard = {
+  id: string;
+  slug: string;
+  title: string;
+  year: number | null;
+  type: string;
+  thumbnail: string | null;
+  artists: { name: string }[];
+};
 
 const TYPE_ICONS = {
   audio: Music,
@@ -92,8 +27,27 @@ export default function ArquivoPage() {
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [artworks, setArtworks] = useState<ArtworkCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredArtworks = MOCK_ARTWORKS.filter((artwork) => {
+  useEffect(() => {
+    let active = true;
+    fetch("/api/public/artworks", { cache: "no-store" })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!active) return;
+        if (!ok) throw new Error(data?.error || "Falha ao carregar o acervo");
+        setArtworks(data.items ?? []);
+      })
+      .catch((e) => active && setError(e instanceof Error ? e.message : "Erro desconhecido"))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filteredArtworks = artworks.filter((artwork) => {
     const matchesSearch = artwork.title.toLowerCase().includes(search.toLowerCase());
     const matchesType = !selectedType || artwork.type === selectedType;
     return matchesSearch && matchesType;
@@ -198,15 +152,33 @@ export default function ArquivoPage() {
               </button>
             </div>
 
+            {error && (
+              <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {error}
+              </div>
+            )}
+
             {/* Results Count */}
             <div className="mb-6">
               <p className="text-sm text-zinc-500">
-                {filteredArtworks.length} resultados encontrados
+                {loading ? "Carregando acervo..." : `${filteredArtworks.length} resultados encontrados`}
               </p>
             </div>
 
             {/* Grid */}
-            {filteredArtworks.length > 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="animate-pulse rounded-lg border border-zinc-200 bg-white">
+                    <div className="aspect-[4/3] bg-zinc-100" />
+                    <div className="p-4 space-y-2">
+                      <div className="h-3 w-12 bg-zinc-100 rounded" />
+                      <div className="h-4 w-3/4 bg-zinc-100 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredArtworks.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
                 {filteredArtworks.map((artwork) => {
                   const Icon = TYPE_ICONS[artwork.type as keyof typeof TYPE_ICONS] || FileText;

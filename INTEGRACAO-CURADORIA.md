@@ -61,3 +61,42 @@ que deve permanecer privado.
 2. Ligar `Capture.artworkId` na tela de obra, para a captura virar prova de uma obra.
 3. Reaproveitar `/arquivo` (hoje com `MOCK_ARTWORKS`) para ler do banco.
 4. Exportar `notas.json` para o vault Obsidian (`obsidian_export.py --notes`).
+
+## Autenticação da área de curadoria
+
+Adicionada proteção para `/admin/*` e `/api/admin/*`:
+
+| Arquivo | Função |
+|---|---|
+| `src/lib/auth.ts` | sessão HMAC-SHA256 (Web Crypto), comparação em tempo constante |
+| `src/middleware.ts` | 401 no JSON da API, redirect para `/login` nas páginas |
+| `src/app/api/auth/login/route.ts` | valida e grava cookie httpOnly (12h) |
+| `src/app/api/auth/logout/route.ts` | apaga o cookie |
+| `src/app/login/page.tsx` | formulário de entrada |
+
+Variáveis novas: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AUTH_SECRET` (veja `.env.example`).
+
+Comportamento verificado:
+
+- `/admin/captures` sem sessão → **307** para `/login?next=...`
+- `/api/admin/captures` sem sessão → **401**
+- senha errada → **401** com mensagem
+- login correto → **200** + cookie `recombo_session`
+- com sessão → **200** e as 37 capturas
+- logout → API volta a **401**
+
+## Acervo público lendo do banco
+
+- `src/app/api/public/artworks/route.ts` — só `status=published` + `accessLevel=public`.
+- `/arquivo` deixou de usar `MOCK_ARTWORKS`: busca da API, com skeleton de carregamento,
+  mensagem de erro e estado vazio. Sem banco, a página não quebra — avisa.
+
+> Pendência conhecida: `/obra/[slug]` ainda usa dados mock. Precisa da mesma troca para
+> abrir a obra a partir do card do acervo.
+
+## Verificação final
+
+- `npx tsc --noEmit` → **0 erros**
+- `npm run build` → ok
+- fluxo de autenticação testado ponta a ponta
+- `/arquivo` responde 200 com o banco fora (estado de erro tratado)
