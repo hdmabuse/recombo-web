@@ -44,9 +44,17 @@ if [ "$STATUS_RC" -ne 0 ] && echo "$STATUS_OUT" | grep -q "P3005"; then
   npx prisma migrate resolve --applied 0001_init || true
 fi
 
-if ! npx prisma migrate deploy; then
-  echo "AVISO: migrate deploy falhou; usando db push como plano B"
-  npx prisma db push --skip-generate
+# Primeiro deploy com migrações em banco existente: baseline e nova tentativa.
+if ! MIGRATE_OUT=$(npx prisma migrate deploy 2>&1); then
+  echo "$MIGRATE_OUT"
+  if echo "$MIGRATE_OUT" | grep -q "P3005"; then
+    echo "banco sem histórico: marcando 0001_init como aplicada (baseline)"
+    npx prisma migrate resolve --applied 0001_init
+    npx prisma migrate deploy
+  else
+    echo "AVISO: migrate deploy falhou; usando db push como plano B"
+    npx prisma db push --skip-generate
+  fi
 fi
 
 log "Build"

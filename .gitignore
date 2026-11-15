@@ -41,7 +41,6 @@ next-env.d.ts
 *.swo
 
 # Prisma
-prisma/migrations/
 
 # Artifacts (temp files)
 *.html.artifact.json
