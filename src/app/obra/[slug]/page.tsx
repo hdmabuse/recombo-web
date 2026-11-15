@@ -71,10 +71,19 @@ export default async function ArtworkPage({ params }: Props) {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-8 lg:col-span-2">
             <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-zinc-900">
-              <div className="text-center">
-                <Play className="mx-auto mb-4 h-16 w-16 text-zinc-500" />
-                <p className="text-sm text-zinc-400">Clique para reproduzir</p>
-              </div>
+              {artwork.fileUrl || artwork.thumbnail ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={(artwork.fileUrl || artwork.thumbnail) as string}
+                  alt={artwork.title}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <div className="text-center">
+                  <Play className="mx-auto mb-4 h-16 w-16 text-zinc-500" />
+                  <p className="text-sm text-zinc-400">Sem imagem preservada</p>
+                </div>
+              )}
             </div>
 
             <div>

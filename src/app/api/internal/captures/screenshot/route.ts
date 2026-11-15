@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { uploadService } from "@/services";
+import sharp from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import prisma from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_BYTES = 15 * 1024 * 1024;
+const MAX_BYTES = 20 * 1024 * 1024;
+const THUMB = { width: 400, height: 300 };
+const FULL_WIDTH = 1600;
 
 /**
- * Recebe a screenshot de uma captura do ArchiveBox e a usa como imagem da obra.
+ * Recebe a screenshot de uma captura do ArchiveBox, gera duas versões
+ * (miniatura 400x300 e imagem até 1600px) e usa a miniatura como capa da obra.
  *
- * Autenticação: Bearer CAPTURE_SYNC_TOKEN (o mesmo do sync de capturas).
- * Chamado por scripts/sync-captures.mjs, que lê o PNG do volume de dados.
+ * Autenticação: Bearer CAPTURE_SYNC_TOKEN.
  */
 export async function POST(request: NextRequest) {
   const expected = process.env.CAPTURE_SYNC_TOKEN || "";
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Arquivo precisa ser imagem." }, { status: 422 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "Imagem maior que 15MB." }, { status: 413 });
+    return NextResponse.json({ error: "Imagem maior que 20MB." }, { status: 413 });
   }
 
   const capture = await prisma.capture.findUnique({ where: { snapshotId } });
@@ -60,54 +62,68 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const url = await storeImage(file, snapshotId);
+    const input = Buffer.from(await file.arrayBuffer());
+    const image = sharp(input, { failOn: "none" }).rotate();
 
-    await prisma.artwork.update({
-      where: { id: capture.artworkId },
-      data: { thumbnail: url },
-    });
+    const fullBuffer = await image
+      .clone()
+      .resize({ width: FULL_WIDTH, withoutEnlargement: true })
+      .jpeg({ quality: 85, mozjpeg: true })
+      .toBuffer();
 
-    const existing = await prisma.artworkFile.findFirst({
-      where: { artworkId: capture.artworkId, type: "thumbnail" },
-    });
-    if (!existing) {
-      await prisma.artworkFile.create({
-        data: {
-          artworkId: capture.artworkId,
-          url,
-          filename: file.name || "screenshot.png",
-          type: "thumbnail",
-          mimeType: file.type,
-          size: file.size,
-        },
-      });
-    }
+    const thumbBuffer = await image
+      .clone()
+      .resize(THUMB.width, THUMB.height, { fit: "cover", position: "center" })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toBuffer();
 
-    return NextResponse.json({ ok: true, url });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "erro desconhecido";
-    return NextResponse.json({ error: `Falha ao enviar imagem: ${message}` }, { status: 500 });
-  }
-}
-
-/**
- * Guarda a imagem. Tenta o Supabase (bucket `media`); se ele não responder,
- * grava em public/uploads/captures e serve pelo próprio domínio.
- */
-async function storeImage(file: File, snapshotId: string): Promise<string> {
-  try {
-    const uploaded = await uploadService.uploadFile(file);
-    return uploaded.url;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "erro";
-    console.warn(`[screenshot] Supabase indisponível (${message}); gravando localmente`);
-
-    const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/webp" ? "webp" : "png";
     const dir = join(process.cwd(), "public", "uploads", "captures");
     await mkdir(dir, { recursive: true });
 
-    const name = `${snapshotId}.${ext}`;
-    await writeFile(join(dir, name), Buffer.from(await file.arrayBuffer()));
-    return `/api/media/captures/${name}`;
+    const fullName = `${snapshotId}-full.jpg`;
+    const thumbName = `${snapshotId}-thumb.jpg`;
+    await writeFile(join(dir, fullName), fullBuffer);
+    await writeFile(join(dir, thumbName), thumbBuffer);
+
+    const fullUrl = `/api/media/captures/${fullName}`;
+    const thumbUrl = `/api/media/captures/${thumbName}`;
+
+    await prisma.artwork.update({
+      where: { id: capture.artworkId },
+      data: { thumbnail: thumbUrl, fileUrl: fullUrl },
+    });
+
+    await upsertFile(capture.artworkId, "thumbnail", thumbUrl, thumbName, thumbBuffer.length);
+    await upsertFile(capture.artworkId, "original", fullUrl, fullName, fullBuffer.length);
+
+    return NextResponse.json({ ok: true, thumbnail: thumbUrl, original: fullUrl });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "erro desconhecido";
+    return NextResponse.json({ error: `Falha ao processar imagem: ${message}` }, { status: 500 });
   }
+}
+
+async function upsertFile(
+  artworkId: string,
+  type: "thumbnail" | "original",
+  url: string,
+  filename: string,
+  size: number,
+) {
+  const existing = await prisma.artworkFile.findFirst({
+    where: { artworkId, type },
+    select: { id: true },
+  });
+
+  if (existing) {
+    await prisma.artworkFile.update({
+      where: { id: existing.id },
+      data: { url, filename, size, mimeType: "image/jpeg" },
+    });
+    return;
+  }
+
+  await prisma.artworkFile.create({
+    data: { artworkId, url, filename, type, mimeType: "image/jpeg", size },
+  });
 }
