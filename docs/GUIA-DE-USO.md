@@ -83,9 +83,10 @@ Tudo em `/admin`:
 
 ## 5. Curadoria de capturas (ArchiveBox)
 
-O ArchiveBox vive na rede local (`192.168.68.110:8030`, tag `col:recombo`) e o droplet
-**não alcança** essa faixa de IP. Por isso o site não fala com ele: a mesa de curadoria
-lê do banco, e um script empurra as capturas.
+O ArchiveBox vive na rede local (`192.168.68.110:8030`, tag `col:recombo`). O droplet
+**alcança** o ArchiveBox pelo túnel WireGuard (`10.8.0.6:8030`), então o próprio servidor
+sincroniza — o site nunca depende da sua máquina estar ligada. A mesa de curadoria lê do
+banco do site; o ArchiveBox é a fonte.
 
 ### 5.1 Sincronizar — automático a cada 15 minutos
 
@@ -107,7 +108,7 @@ Para conferir o que entrou: `/admin/captures`. Para acompanhar a sincronização
 tail -20 /var/log/recombo-sync.log     # no droplet
 ```
 
-### 5.2 Curar### 5.2 Curar
+### 5.2 Curar
 
 1. Abra `/admin/captures`
 2. Cada linha é uma captura, com quatro estados:
@@ -229,3 +230,44 @@ rm /etc/nginx/sites-enabled/zima-arquivo.conf && systemctl reload nginx
 - [ ] `status = published` e `accessLevel = public`
 - [ ] conferir em `/arquivo` e em `/obra/<slug>`
 - [ ] se houver captura relacionada, linkar na nota de curadoria
+
+### 5.3 Operação do ArchiveBox — regras que evitam desastre
+
+Estas quatro regras vieram de um incidente real: em 15/11/2026 o acervo saiu de 43 itens
+para **38 mil snapshots** e 32 GB. A causa não foi bug — foi configuração.
+
+**1. Profundidade é a variável perigosa.** Um crawl em `max_depth=3` a partir do SoundCloud
+(artistas → redes → sites → assets) gerou 9.500 páginas sozinho. Para arquivar uma página:
+
+```bash
+docker exec archivebox archivebox add --tag=col:recombo "https://exemplo.com"
+```
+
+Isso arquiva **só a URL** — sem seguir links. Se precisar de crawl, use `max_depth=0` ou `1`
+e um teto global:
+
+```bash
+docker exec archivebox archivebox config --set 'CRAWL_MAX_URLS=200'
+```
+
+**2. `URL_DENYLIST` é INI multilinha, não TOML.** As continuações vão indentadas com tab:
+
+```
+URL_DENYLIST = ^https?://([^/]*\.)?(apple\.com)([/:?#]|$)
+	^https?://[^/]*\*
+```
+
+Validar com `tomllib` dá **falso negativo**. O parser real é `configparser`.
+
+**3. O CLI imprime com `rich` e quebra em padrões com `[/:?#]`.** É **cosmético**: a gravação
+acontece antes da impressão. Se precisar contornar, troque `logging_util.print` antes de chamar
+a função — ou use padrões sem colchetes.
+
+**4. Remover por domínio exige excluir a curadoria.** Sempre acrescente
+`.exclude(tags__name__startswith="col:")`, senão as páginas tagueadas (ex.: as 4 da Wikipédia
+em `col:manguebeat`) vão junto.
+
+```python
+qs = Snapshot.objects.filter(url__regex=padrao).exclude(tags__name__startswith="col:").distinct()
+remove(snapshots=qs, yes=True, timeout=3600)
+```
