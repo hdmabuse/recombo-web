@@ -412,3 +412,19 @@ migração chegava ao servidor. Corrigido — e é o tipo de erro que só aparec
 usar o mecanismo de verdade.
 
 Daqui em diante, mudança de schema = arquivo novo em `prisma/migrations/`, revisado no PR.
+
+## Drill manual de restore (quando o usuário do banco não tem CREATEDB)
+
+```bash
+# no droplet, como root
+DUMP=$(ls -1t /var/backups/recombo/db-*.sql.gz | head -1)
+sudo -u postgres createdb recombo_restore_test
+gunzip -c "$DUMP" | sudo -u postgres psql -q -d recombo_restore_test
+sudo -u postgres psql -d recombo_restore_test -c 'select count(*) from "Artwork"'
+sudo -u postgres psql -d recombo_restore_test -c 'select count(*) from "Capture"'
+sudo -u postgres dropdb recombo_restore_test
+```
+
+Aprendizado: **não** se restaura dump `pg_dump` em schema temporário — o dump emite
+`set_config('search_path','',false)` e passa por cima do `SET search_path`. Banco
+isolado é o único caminho seguro.

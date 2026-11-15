@@ -23,5 +23,9 @@ HASH="$(sha256sum /opt/recombo-web/scripts/restore-test.sh | cut -d" " -f1)"
 if [ ! -f "$MARKER" ] || [ "$(cat "$MARKER")" != "$HASH" ]; then
   mkdir -p /var/backups/recombo
   /opt/recombo-web/scripts/backup.sh
-  /opt/recombo-web/scripts/restore-test.sh && echo "$HASH" > "$MARKER"
+  if /opt/recombo-web/scripts/restore-test.sh; then
+    echo "$HASH" > "$MARKER"
+  else
+    echo "AVISO: validação do backup falhou"
+  fi
 fi
