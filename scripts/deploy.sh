@@ -26,7 +26,7 @@ set +a
 log "Código: $BRANCH @ $SHA"
 git fetch --prune origin "$BRANCH"
 git reset --hard "$SHA"
-git clean -fd -e node_modules -e .env -e .next
+git clean -fd -e node_modules -e .env -e .next -e public/uploads
 
 log "Dependências (npm ci)"
 npm ci --no-audit --no-fund

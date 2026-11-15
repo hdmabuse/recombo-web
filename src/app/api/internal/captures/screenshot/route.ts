@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { uploadService } from "@/services";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,11 +60,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const uploaded = await uploadService.uploadFile(file);
+    const url = await storeImage(file, snapshotId);
 
     await prisma.artwork.update({
       where: { id: capture.artworkId },
-      data: { thumbnail: uploaded.url },
+      data: { thumbnail: url },
     });
 
     const existing = await prisma.artworkFile.findFirst({
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
       await prisma.artworkFile.create({
         data: {
           artworkId: capture.artworkId,
-          url: uploaded.url,
+          url,
           filename: file.name || "screenshot.png",
           type: "thumbnail",
           mimeType: file.type,
@@ -81,9 +83,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ ok: true, url: uploaded.url });
+    return NextResponse.json({ ok: true, url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "erro desconhecido";
     return NextResponse.json({ error: `Falha ao enviar imagem: ${message}` }, { status: 500 });
+  }
+}
+
+/**
+ * Guarda a imagem. Tenta o Supabase (bucket `media`); se ele não responder,
+ * grava em public/uploads/captures e serve pelo próprio domínio.
+ */
+async function storeImage(file: File, snapshotId: string): Promise<string> {
+  try {
+    const uploaded = await uploadService.uploadFile(file);
+    return uploaded.url;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "erro";
+    console.warn(`[screenshot] Supabase indisponível (${message}); gravando localmente`);
+
+    const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/webp" ? "webp" : "png";
+    const dir = join(process.cwd(), "public", "uploads", "captures");
+    await mkdir(dir, { recursive: true });
+
+    const name = `${snapshotId}.${ext}`;
+    await writeFile(join(dir, name), Buffer.from(await file.arrayBuffer()));
+    return `/uploads/captures/${name}`;
   }
 }
