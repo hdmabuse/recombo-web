@@ -428,3 +428,16 @@ sudo -u postgres dropdb recombo_restore_test
 Aprendizado: **não** se restaura dump `pg_dump` em schema temporário — o dump emite
 `set_config('search_path','',false)` e passa por cima do `SET search_path`. Banco
 isolado é o único caminho seguro.
+
+## Restore validado (15/11/2026)
+
+```
+dump: /var/backups/recombo/db-20261115-1430.sql.gz (16K)
+sanidade: 15 CREATE TABLE, 15 COPY
+restore OK em banco temporário: Artwork=6 Capture=39
+validação completa: backup + restore exercitados
+```
+
+O usuário `recombo` recebeu `CREATEDB` (dado por `postgres`), o que permite ao deploy
+restaurar o dump num banco isolado, conferir as contagens e apagar — sem tocar em produção.
+O marcador diário só grava `restore=ok` quando o restore realmente acontece.
