@@ -263,12 +263,22 @@ export default function AdminCapturesPage() {
             ))}
 
             {visible.length === 0 && (
-              <p className="text-sm text-zinc-500">
-                Nenhuma captura para este filtro.{" "}
-                <Link href="/admin" className="underline">
-                  voltar ao painel
-                </Link>
-              </p>
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {items.length === 0 ? (
+                  <>
+                    <p className="font-medium">Nenhuma captura sincronizada ainda.</p>
+                    <p className="mt-1">
+                      O ArchiveBox está na rede local e o servidor não o alcança. Na máquina que
+                      enxerga o ArchiveBox, rode:
+                    </p>
+                    <pre className="mt-2 overflow-x-auto rounded bg-white/70 p-2 text-xs">
+                      ARCHIVEBOX_TOKEN=… CAPTURE_SYNC_TOKEN=… node scripts/sync-captures.mjs
+                    </pre>
+                  </>
+                ) : (
+                  <p>Nenhuma captura para este filtro.</p>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -1,57 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
-import { isConfigured, listSnapshots, archiveboxBaseUrl } from "@/lib/archivebox";
+import { archiveboxBaseUrl } from "@/lib/archivebox";
 
 export const dynamic = "force-dynamic";
 
 const COLLECTION = process.env.ARCHIVEBOX_TAG || "col:recombo";
 
-/** GET: snapshots do ArchiveBox + decisões de curadoria já salvas. */
+/**
+ * GET: capturas já sincronizadas no banco.
+ *
+ * O ArchiveBox vive na rede local do coletivo (192.168.x), inacessível a partir
+ * do droplet. Por isso o servidor NÃO fala com ele: a sincronização é feita por
+ * `scripts/sync-captures.mjs`, rodando na máquina que enxerga o ArchiveBox.
+ */
 export async function GET() {
-  if (!isConfigured()) {
-    return NextResponse.json(
-      { error: "ARCHIVEBOX_TOKEN não configurado no servidor." },
-      { status: 503 },
-    );
-  }
-
   try {
-    const snapshots = await listSnapshots(COLLECTION);
-    const ids = snapshots.map((s) => s.id);
-
-    // Se a migração ainda não rodou, a mesa abre em modo leitura (tudo como inbox).
-    let saved: Awaited<ReturnType<typeof prisma.capture.findMany>> = [];
-    let warning: string | null = null;
-    try {
-      saved = await prisma.capture.findMany({ where: { snapshotId: { in: ids } } });
-    } catch {
-      warning = "Tabela de capturas ausente: rode `npx prisma migrate dev --name add_captures`.";
-    }
-    const byId = new Map(saved.map((c) => [c.snapshotId, c]));
-
-    const items = snapshots.map((s) => {
-      const c = byId.get(s.id);
-      return {
-        snapshotId: s.id,
-        url: s.url,
-        title: c?.title || s.title || "",
-        archivedTitle: s.title,
-        capturedAt: s.bookmarked_at || s.created_at,
-        size: s.archive_size ?? 0,
-        tags: s.tags ?? [],
-        note: c?.note ?? "",
-        status: c?.status ?? "inbox",
-        accessLevel: c?.accessLevel ?? "restricted",
-        license: c?.license ?? "LUCR",
-        artworkId: c?.artworkId ?? null,
-      };
+    const rows = await prisma.capture.findMany({
+      orderBy: [{ capturedAt: "desc" }, { createdAt: "desc" }],
+      take: 500,
     });
 
+    const items = rows.map((c) => ({
+      snapshotId: c.snapshotId,
+      url: c.url,
+      title: c.title || "",
+      archivedTitle: null,
+      capturedAt: c.capturedAt?.toISOString() ?? null,
+      size: 0,
+      tags: c.tags,
+      note: c.note ?? "",
+      status: c.status,
+      accessLevel: c.accessLevel,
+      license: c.license,
+      artworkId: c.artworkId,
+    }));
+
     return NextResponse.json({
+      source: "database",
       collection: COLLECTION,
       archivebox: archiveboxBaseUrl(),
-      warning,
+      warning: items.length === 0 ? "Nenhuma captura sincronizada ainda." : null,
       stats: {
         total: items.length,
         inbox: items.filter((i) => i.status === "inbox").length,
@@ -63,7 +52,7 @@ export async function GET() {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "erro desconhecido";
-    return NextResponse.json({ error: `Falha ao ler o ArchiveBox: ${message}` }, { status: 502 });
+    return NextResponse.json({ error: `Falha ao ler o banco: ${message}` }, { status: 500 });
   }
 }
 
