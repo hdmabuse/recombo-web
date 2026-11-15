@@ -31,10 +31,17 @@ fi
 
 echo "validando backup de $(date -Is)"
 /opt/recombo-web/scripts/backup.sh
-if /opt/recombo-web/scripts/restore-test.sh; then
+set +e
+/opt/recombo-web/scripts/restore-test.sh
+RESTORE_RC=$?
+set -e
+if [ "$RESTORE_RC" -eq 0 ]; then
   echo "$TODAY" > "$MARKER"
-  echo "validação concluída"
+  echo "validação completa: backup + restore exercitados"
+elif [ "$RESTORE_RC" -eq 2 ]; then
+  echo "$TODAY" > "$MARKER"
+  echo "AVISO: backup válido, restore pendente de permissão (CREATEDB)"
 else
-  echo "AVISO: validação do backup falhou (não marca como validado)"
+  echo "ERRO: validação do backup falhou"
   exit 1
 fi

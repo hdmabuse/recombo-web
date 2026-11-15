@@ -39,6 +39,6 @@ if psql "$ADMIN_URL" -q -c "CREATE DATABASE \"$TEST_DB\"" 2>/dev/null; then
   exit 0
 fi
 
-echo "AVISO: usuário do banco não tem CREATEDB — restore não exercitado."
-echo "       Rode o drill manual como postgres (documentado em docs/REFATORACAO.md)."
-exit 0
+echo "AVISO: usuário do banco não tem CREATEDB — restore NÃO exercitado."
+echo "       Drill manual: docs/REFATORACAO.md (seção 'Drill manual de restore')."
+exit 2
