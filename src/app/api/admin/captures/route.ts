@@ -46,6 +46,7 @@ export async function GET() {
         inbox: items.filter((i) => i.status === "inbox").length,
         selected: items.filter((i) => i.status === "selected").length,
         published: items.filter((i) => i.status === "published").length,
+        visible: items.filter((i) => i.status === "published").length,
         rejected: items.filter((i) => i.status === "rejected").length,
       },
       items,
@@ -89,30 +90,26 @@ export async function POST(request: NextRequest) {
 
   try {
     await prisma.$transaction(
-      parsed.data.items.map((item) =>
-        prisma.capture.upsert({
+      parsed.data.items.map((item) => {
+        // Publicar significa aparecer no site: garante acesso público.
+        const accessLevel = item.status === "published" ? "public" : item.accessLevel;
+        const data = {
+          url: item.url,
+          title: item.title || null,
+          note: item.note || null,
+          capturedAt: item.capturedAt ? new Date(item.capturedAt) : null,
+          status: item.status,
+          accessLevel,
+          license: item.license,
+          tags: item.tags ?? [],
+        };
+
+        return prisma.capture.upsert({
           where: { snapshotId: item.snapshotId },
-          create: {
-            snapshotId: item.snapshotId,
-            url: item.url,
-            title: item.title || null,
-            note: item.note || null,
-            capturedAt: item.capturedAt ? new Date(item.capturedAt) : null,
-            status: item.status,
-            accessLevel: item.accessLevel,
-            license: item.license,
-            tags: item.tags ?? [],
-          },
-          update: {
-            title: item.title || null,
-            note: item.note || null,
-            status: item.status,
-            accessLevel: item.accessLevel,
-            license: item.license,
-            tags: item.tags ?? [],
-          },
-        }),
-      ),
+          create: { snapshotId: item.snapshotId, ...data },
+          update: data,
+        });
+      }),
     );
 
     return NextResponse.json({ saved: parsed.data.items.length });

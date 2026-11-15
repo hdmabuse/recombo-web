@@ -129,7 +129,8 @@ export default function AdminCapturesPage() {
               </h1>
               <p className="mt-1 text-sm text-zinc-500">
                 {items.length} capturas · {counts.inbox} na caixa de entrada · {counts.selected}{" "}
-                selecionadas · {counts.published} publicadas
+                selecionadas · {counts.published} publicadas ·{" "}
+                {items.filter((i) => i.status === "published").length} visíveis no site
               </p>
             </div>
             <button
@@ -220,9 +221,15 @@ export default function AdminCapturesPage() {
                   <div className="flex shrink-0 items-center gap-2">
                     <select
                       value={item.status}
-                      onChange={(e) =>
-                        update(item.snapshotId, { status: e.target.value as CaptureStatus })
-                      }
+                      onChange={(e) => {
+                        const status = e.target.value as CaptureStatus;
+                        update(item.snapshotId, {
+                          status,
+                          ...(status === "published"
+                            ? { accessLevel: "public" as AccessLevel }
+                            : {}),
+                        });
+                      }}
                       className="rounded border border-zinc-300 px-2 py-1 text-xs"
                     >
                       {(Object.keys(STATUS_LABELS) as CaptureStatus[]).map((s) => (
@@ -242,6 +249,9 @@ export default function AdminCapturesPage() {
                       <option value="private">Privado</option>
                       <option value="public">Público</option>
                     </select>
+                    {item.status === "published" && (
+                      <span className="text-xs text-green-700">no ar</span>
+                    )}
                   </div>
                 </div>
 

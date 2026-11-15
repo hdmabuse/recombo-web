@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const captures = await prisma.capture.findMany({
-      where: { status: "published", accessLevel: "public" },
+      where: { status: "published" },
       orderBy: [{ highlight: "desc" }, { capturedAt: "desc" }],
       take: limit,
       select: {
