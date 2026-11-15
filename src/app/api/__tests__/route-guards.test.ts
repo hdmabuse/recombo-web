@@ -21,6 +21,9 @@ function routeFiles(dir: string): string[] {
 /** Rotas que recebem arquivo (não têm body JSON para validar com zod). */
 const FILE_UPLOAD_ROUTES = ["/admin/upload/", "/admin/import/"];
 
+/** Rotas de ação sem corpo JSON (não há o que validar com zod). */
+const ACTION_ONLY_ROUTES = ["/admin/captures/purge/"];
+
 const files = routeFiles(API_ROOT);
 const rel = (file: string) => file.slice(API_ROOT.length).replace(/\\/g, "/");
 const source = (file: string) => readFileSync(file, "utf8");
@@ -42,7 +45,8 @@ describe("proteção das rotas de API", () => {
       (f) =>
         rel(f).startsWith("/admin/") &&
         isMutation(source(f)) &&
-        !FILE_UPLOAD_ROUTES.some((p) => rel(f).includes(p)),
+        !FILE_UPLOAD_ROUTES.some((p) => rel(f).includes(p)) &&
+        !ACTION_ONLY_ROUTES.some((p) => rel(f).includes(p)),
     );
     const semZod = mutacoes.filter((f) => !source(f).includes("safeParse"));
     expect(semZod.map(rel)).toEqual([]);

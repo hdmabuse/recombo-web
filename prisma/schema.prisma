@@ -427,3 +427,10 @@ enum CaptureStatus {
   published
   rejected
 }
+
+// Lápide de capturas descartadas: impede que a sincronização as recrie.
+model CaptureDismissal {
+  snapshotId String   @id
+  reason     String?
+  createdAt  DateTime @default(now())
+}

@@ -50,10 +50,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // capturas descartadas não voltam: o snapshotId fica registrado como lápide
+  const incomingIds = parsed.data.items.map((i) => i.snapshotId);
+  const dismissedRows = await prisma.captureDismissal.findMany({
+    where: { snapshotId: { in: incomingIds } },
+    select: { snapshotId: true },
+  });
+  const dismissed = new Set(dismissedRows.map((d) => d.snapshotId));
+  const items = parsed.data.items.filter((i) => !dismissed.has(i.snapshotId));
+
   let created = 0;
   let updated = 0;
 
-  for (const item of parsed.data.items) {
+  for (const item of items) {
     const capturedAt = item.capturedAt ? new Date(item.capturedAt) : null;
 
     const existing = await prisma.capture.findUnique({
@@ -99,7 +108,8 @@ export async function POST(request: NextRequest) {
     ok: true,
     created,
     updated,
-    total: parsed.data.items.length,
+    total: items.length,
+    dismissed: dismissed.size,
     artworks: pending.length,
   });
 }

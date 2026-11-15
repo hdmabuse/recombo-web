@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Archive, ExternalLink, Loader2, Save, Search } from "lucide-react";
+import { Archive, ExternalLink, Loader2, Save, Search, Trash2 } from "lucide-react";
 
 type CaptureStatus = "inbox" | "selected" | "published" | "rejected";
 type AccessLevel = "public" | "private" | "restricted";
@@ -42,6 +42,7 @@ export default function AdminCapturesPage() {
   const [items, setItems] = useState<CaptureItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [purging, setPurging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -115,6 +116,32 @@ export default function AdminCapturesPage() {
     }
   };
 
+  const purgeRejected = async () => {
+    const rejected = items.filter((i) => i.status === "rejected").length;
+    if (rejected === 0) return;
+    if (
+      !window.confirm(
+        `Apagar definitivamente ${rejected} captura(s) descartada(s)?\n\nElas não voltam na próxima sincronização.`,
+      )
+    ) {
+      return;
+    }
+    setPurging(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/captures/purge", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Falha ao apagar");
+      setMessage(`${data.purged} captura(s) descartada(s) apagada(s)`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setPurging(false);
+    }
+  };
+
   const counts = useMemo(() => {
     const c = { inbox: 0, selected: 0, published: 0, rejected: 0 };
     items.forEach((i) => c[i.status]++);
@@ -136,6 +163,19 @@ export default function AdminCapturesPage() {
                 {items.filter((i) => i.status === "published").length} visíveis no site
               </p>
             </div>
+            <button
+              onClick={purgeRejected}
+              disabled={purging || loading || counts.rejected === 0}
+              className="flex items-center gap-2 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
+              title="Apaga as capturas marcadas como Descartada"
+            >
+              {purging ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Apagar descartadas ({counts.rejected})
+            </button>
             <button
               onClick={save}
               disabled={saving || loading}
