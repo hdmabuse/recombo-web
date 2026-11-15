@@ -7,14 +7,15 @@ do dia a dia: navegar, cadastrar, curar capturas e publicar.
 
 ## 1. Estado atual do site (leia antes de tudo)
 
-| O que                  | Situação em 14/11/2026                                                      |
-| ---------------------- | --------------------------------------------------------------------------- |
-| Páginas públicas       | `/`, `/arquivo`, `/obra/<slug>`, `/arquivo/capturas`, `/timeline`, `/sobre` |
-| Menu com link quebrado | `/rede`, `/mapa` e `/comunidade` aparecem no menu mas dão **404**           |
-| Link quebrado na obra  | `/artista/<slug>` ainda **não existe** (404)                                |
-| Acervo (obras)         | **vazio** — `/api/arquivo` retorna 0                                        |
-| Capturas               | tabela criada, **0 publicadas**                                             |
-| Admin                  | `/admin/login` (usuário vem do banco, não de variável de ambiente)          |
+| O que                   | Situação em 14/11/2026                                                      |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Páginas públicas        | `/`, `/arquivo`, `/obra/<slug>`, `/arquivo/capturas`, `/timeline`, `/sobre` |
+| Menu com link quebrado  | `/rede`, `/mapa` e `/comunidade` aparecem no menu mas dão **404**           |
+| Link quebrado na obra   | `/artista/<slug>` ainda **não existe** (404)                                |
+| Acervo (obras)          | **vazio** — `/api/arquivo` retorna 0                                        |
+| Capturas                | **39 sincronizadas**, 0 publicadas (curadoria pendente)                     |
+| ArchiveBox fora de casa | `https://arquivo.mabuse.art.br` (Basic Auth + login do ArchiveBox)          |
+| Admin                   | `/admin/login` (usuário vem do banco, não de variável de ambiente)          |
 
 Ou seja: o site está no ar, mas o conteúdo ainda precisa ser cadastrado.
 
@@ -82,8 +83,33 @@ Tudo em `/admin`:
 
 ## 5. Curadoria de capturas (ArchiveBox)
 
-As capturas nascem no ArchiveBox (`http://192.168.68.110:8030`, tag `col:recombo`).
-O site não guarda o HTML arquivado — apenas a decisão editorial e a nota.
+O ArchiveBox vive na rede local (`192.168.68.110:8030`, tag `col:recombo`) e o droplet
+**não alcança** essa faixa de IP. Por isso o site não fala com ele: a mesa de curadoria
+lê do banco, e um script empurra as capturas.
+
+### 5.1 Sincronizar (quando houver capturas novas)
+
+Na máquina que enxerga o ArchiveBox — seu notebook na mesma rede, ou o próprio ZimaOS:
+
+```bash
+ARCHIVEBOX_TOKEN=... CAPTURE_SYNC_TOKEN=... node scripts/sync-captures.mjs
+```
+
+Saída esperada: `ok: 39 criadas, 0 atualizadas`. É idempotente: rodar de novo atualiza,
+não duplica.
+
+No ZimaOS, via Docker (o container não tem saída para o GitHub, então monte o arquivo):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hdmabuse/recombo-web/feature/open-design-layout/scripts/sync-captures.mjs -o /DATA/sync.mjs
+
+docker run --rm --network host \
+  -e ARCHIVEBOX_URL=http://192.168.68.110:8030 \
+  -e ARCHIVEBOX_TOKEN=... -e CAPTURE_SYNC_TOKEN=... \
+  -v /DATA/sync.mjs:/s.mjs:ro node:22-alpine node /s.mjs
+```
+
+### 5.2 Curar
 
 1. Abra `/admin/captures`
 2. Cada linha é uma captura, com quatro estados:
@@ -166,7 +192,30 @@ node scripts/ingest-articles.mjs ./reportagens             # grava
 
 ---
 
-## 9. Checklist para publicar uma obra
+## 9. ArchiveBox fora de casa (`arquivo.mabuse.art.br`)
+
+O ArchiveBox é servido pelo droplet, que alcança o ZimaOS por WireGuard (`10.8.0.6:8030`).
+
+- **Primeira barreira:** Basic Auth do nginx — usuário `mabuse`, senha em `/root/arquivo-basic-auth.txt` no droplet
+- **Segunda barreira:** login próprio do ArchiveBox
+- `X-Robots-Tag: noindex` e `X-Frame-Options: DENY` já estão aplicados
+
+Se o login der **403 CSRF**, verifique:
+
+1. `CSRF_TRUSTED_ORIGINS` no `docker-compose.yml` do ZimaOS deve conter
+   `https://arquivo.mabuse.art.br` (e pode manter a origem da LAN)
+2. o vhost **não** deve enviar `Referrer-Policy: no-referrer` — o Django usa o
+   `Referer` quando o navegador não manda `Origin`
+
+Para desligar o acesso externo sem afetar o resto:
+
+```bash
+rm /etc/nginx/sites-enabled/zima-arquivo.conf && systemctl reload nginx
+```
+
+---
+
+## 10. Checklist para publicar uma obra
 
 - [ ] artista cadastrado (`/admin/artists`)
 - [ ] obra criada com tipo, ano e descrição
