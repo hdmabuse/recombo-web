@@ -108,6 +108,6 @@ async function storeImage(file: File, snapshotId: string): Promise<string> {
 
     const name = `${snapshotId}.${ext}`;
     await writeFile(join(dir, name), Buffer.from(await file.arrayBuffer()));
-    return `/uploads/captures/${name}`;
+    return `/api/media/captures/${name}`;
   }
 }
