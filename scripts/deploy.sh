@@ -31,9 +31,23 @@ git clean -fd -e node_modules -e .env -e .next -e public/uploads
 log "Dependências (npm ci)"
 npm ci --no-audit --no-fund
 
-log "Prisma: client + schema"
+log "Prisma: client + migrações"
 npx prisma generate
-npx prisma db push --skip-generate
+
+# Baseline: banco criado antes das migrações (P3005) recebe 0001_init como aplicada.
+set +e
+STATUS_OUT=$(npx prisma migrate status 2>&1)
+STATUS_RC=$?
+set -e
+if [ "$STATUS_RC" -ne 0 ] && echo "$STATUS_OUT" | grep -q "P3005"; then
+  echo "banco sem histórico de migrações: aplicando baseline 0001_init"
+  npx prisma migrate resolve --applied 0001_init || true
+fi
+
+if ! npx prisma migrate deploy; then
+  echo "AVISO: migrate deploy falhou; usando db push como plano B"
+  npx prisma db push --skip-generate
+fi
 
 log "Build"
 npm run build
