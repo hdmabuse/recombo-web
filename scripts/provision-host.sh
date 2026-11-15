@@ -24,7 +24,7 @@ fi
 
 mkdir -p "$BACKUP_DIR"
 
-if [ "$(cat "$MARKER" 2>/dev/null || echo '')" = "$TODAY" ]; then
+if [ "$(cat "$MARKER" 2>/dev/null || echo '')" = "$TODAY restore=ok" ]; then
   echo "backup já validado hoje ($TODAY)"
   exit 0
 fi
@@ -36,10 +36,10 @@ set +e
 RESTORE_RC=$?
 set -e
 if [ "$RESTORE_RC" -eq 0 ]; then
-  echo "$TODAY" > "$MARKER"
+  echo "$TODAY restore=ok" > "$MARKER"
   echo "validação completa: backup + restore exercitados"
 elif [ "$RESTORE_RC" -eq 2 ]; then
-  echo "$TODAY" > "$MARKER"
+  echo "$TODAY restore=pending" > "$MARKER"
   echo "AVISO: backup válido, restore pendente de permissão (CREATEDB)"
 else
   echo "ERRO: validação do backup falhou"
