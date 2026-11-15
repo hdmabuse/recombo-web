@@ -123,6 +123,12 @@ tail -20 /var/log/recombo-sync.log     # no droplet
 Para publicar: estado **Publicada** + acesso **Público**.
 Para despublicar: volte o estado para **Selecionada** — o item sai do site.
 
+**Apagar descartadas:** o botão _Apagar descartadas (N)_ remove definitivamente as
+capturas em estado **Descartada**. Antes de apagar, o sistema grava uma **lápide**
+(`CaptureDismissal`) com o `snapshotId` — sem isso a sincronização de 15 em 15 minutos
+recriaria cada uma como "caixa de entrada". Ação irreversível na mesa: se quiser a
+captura de volta, é preciso remover a lápide no banco.
+
 ---
 
 ## 6. Publicar no ar (deploy)
