@@ -217,16 +217,9 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <h2 className="mb-4 text-3xl font-bold text-zinc-900">Participe da comunidade</h2>
           <p className="mx-auto mb-8 max-w-2xl text-zinc-600">
-            Contribua com o acervo, participe de oficinas, ou simplyStay connected com as atividades
-            do projeto.
+            Contribua com o acervo, participe de oficinas e acompanhe as atividades do projeto.
           </p>
           <div className="flex justify-center gap-4">
-            <Link
-              href="/comunidade"
-              className="rounded-md bg-zinc-900 px-6 py-3 font-medium text-white transition-colors hover:bg-zinc-800"
-            >
-              Comunidade
-            </Link>
             <Link
               href="/arquivo?tag=colaboração"
               className="rounded-md border border-zinc-300 px-6 py-3 font-medium text-zinc-700 transition-colors hover:bg-zinc-50"

@@ -9,10 +9,7 @@ const NAV_ITEMS = [
   { label: "Acervo", href: "/arquivo" },
   { label: "Capturas", href: "/arquivo/capturas" },
   { label: "Linha do Tempo", href: "/timeline" },
-  { label: "Mapa", href: "/mapa" },
-  { label: "Rede", href: "/rede" },
   { label: "Sobre", href: "/sobre" },
-  { label: "Comunidade", href: "/comunidade" },
 ];
 
 const FEATURED_TAGS = [

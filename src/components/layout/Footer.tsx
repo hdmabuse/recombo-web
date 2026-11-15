@@ -49,16 +49,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/mapa" className="transition-colors hover:text-white">
-                  Mapa
-                </Link>
-              </li>
-              <li>
-                <Link href="/rede" className="transition-colors hover:text-white">
-                  Rede
-                </Link>
-              </li>
-              <li>
                 <Link href="/sobre" className="transition-colors hover:text-white">
                   Sobre
                 </Link>
