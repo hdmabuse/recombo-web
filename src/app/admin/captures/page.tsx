@@ -19,6 +19,9 @@ type CaptureItem = {
   status: CaptureStatus;
   accessLevel: AccessLevel;
   license: string;
+  artworkId: string | null;
+  artworkSlug: string | null;
+  artworkStatus: string | null;
 };
 
 const STATUS_LABELS: Record<CaptureStatus, string> = {
@@ -249,6 +252,16 @@ export default function AdminCapturesPage() {
                       <option value="private">Privado</option>
                       <option value="public">Público</option>
                     </select>
+                    {item.artworkSlug && (
+                      <a
+                        href={`/obra/${item.artworkSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-700 underline"
+                      >
+                        ver obra
+                      </a>
+                    )}
                     {item.status === "published" && (
                       <span className="text-xs text-green-700">no ar</span>
                     )}

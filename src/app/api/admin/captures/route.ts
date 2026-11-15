@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { archiveboxBaseUrl } from "@/lib/archivebox";
+import { syncArtworkForCapture } from "@/lib/captures/artwork";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +17,19 @@ const COLLECTION = process.env.ARCHIVEBOX_TAG || "col:recombo";
  */
 export async function GET() {
   try {
+    // Materializa obras para capturas publicadas antes desta funcionalidade existir.
+    const pending = await prisma.capture.findMany({
+      where: { status: "published", artworkId: null },
+      take: 100,
+    });
+    for (const capture of pending) {
+      await syncArtworkForCapture(capture);
+    }
+
     const rows = await prisma.capture.findMany({
       orderBy: [{ capturedAt: "desc" }, { createdAt: "desc" }],
       take: 500,
+      include: { artwork: { select: { slug: true, status: true } } },
     });
 
     const items = rows.map((c) => ({
@@ -34,6 +45,8 @@ export async function GET() {
       accessLevel: c.accessLevel,
       license: c.license,
       artworkId: c.artworkId,
+      artworkSlug: c.artwork?.slug ?? null,
+      artworkStatus: c.artwork?.status ?? null,
     }));
 
     return NextResponse.json({
@@ -112,7 +125,18 @@ export async function POST(request: NextRequest) {
       }),
     );
 
-    return NextResponse.json({ saved: parsed.data.items.length });
+    // Publicar cria/atualiza a obra correspondente no acervo.
+    let artworks = 0;
+    for (const item of parsed.data.items) {
+      const capture = await prisma.capture.findUnique({
+        where: { snapshotId: item.snapshotId },
+      });
+      if (!capture) continue;
+      await syncArtworkForCapture(capture);
+      if (capture.status === "published") artworks += 1;
+    }
+
+    return NextResponse.json({ saved: parsed.data.items.length, artworks });
   } catch (error) {
     const message = error instanceof Error ? error.message : "erro desconhecido";
     return NextResponse.json({ error: `Falha ao gravar: ${message}` }, { status: 500 });
