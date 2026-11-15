@@ -1,0 +1,29 @@
+name: Uptime
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  healthcheck:
+    name: recombo.com.br /api/health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar saúde do site
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 15 https://recombo.com.br/api/health || echo 000)
+            echo "tentativa $attempt -> HTTP $code"
+            cat /tmp/health.json 2>/dev/null || true
+            echo
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::recombo.com.br não respondeu saudável (último HTTP $code)"
+          exit 1

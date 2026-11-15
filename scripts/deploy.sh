@@ -68,6 +68,11 @@ else
   pm2 save
 fi
 
+log "Provisionamento do host (cron de backup)"
+if [ -x scripts/provision-host.sh ]; then
+  bash scripts/provision-host.sh || echo "AVISO: provisionamento falhou (segue o deploy)"
+fi
+
 log "Healthcheck"
 sleep 3
 if curl -fsS -o /dev/null --max-time 10 "$HEALTH_URL"; then
