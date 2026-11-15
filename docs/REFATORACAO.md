@@ -349,3 +349,49 @@ Os demais (S1, S4, S6, S9, S10, R1–R6) ficam no roadmap abaixo.
 - nenhuma rota pública pode exportar POST/PUT/PATCH/DELETE
 
 Se alguém adicionar uma rota sem guard, o CI fica vermelho — a regra deixa de ser combinado e passa a ser verificável.
+
+---
+
+# F2 executado (parcial) — 15/11/2026
+
+| Item                      | Estado            | Evidência                                                                                                                             |
+| ------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| B1. Migrações versionadas | **feito**         | `prisma/migrations/0001_init` gerado do schema; deploy faz baseline automático (P3005) e `migrate deploy`, com `db push` como plano B |
+| B2. Testes                | **início**        | **23 testes** (guardas, upload, schemas zod, slugify)                                                                                 |
+| B3. CI                    | **feito**         | PR roda `prisma validate` + `tsc` + `npm test` + build                                                                                |
+| B4. Observabilidade       | **parcial**       | `GET /api/health` (banco + uptime); falta Sentry e uptime externo                                                                     |
+| B5. Backups               | **script pronto** | `scripts/backup.sh` (pg_dump + uploads, retenção 7 dias); falta instalar o cron                                                       |
+| B6. Error boundaries      | **feito**         | `error.tsx`, `not-found.tsx`, `global-error.tsx`                                                                                      |
+
+## Instalar o backup (no droplet, uma vez)
+
+```bash
+chmod +x /opt/recombo-web/scripts/backup.sh
+(crontab -l 2>/dev/null; echo "15 3 * * * /opt/recombo-web/scripts/backup.sh >> /var/log/recombo-backup.log 2>&1") | crontab -
+/opt/recombo-web/scripts/backup.sh    # primeira execução, para validar
+```
+
+Restore:
+
+```bash
+gunzip -c /var/backups/recombo/db-AAAAMMDD-HHMM.sql.gz | psql "$DATABASE_URL"
+tar xzf /var/backups/recombo/uploads-AAAAMMDD-HHMM.tar.gz -C /opt/recombo-web/public
+```
+
+## Migrações — como conviver com o banco atual
+
+O banco já existia antes das migrações. No primeiro deploy, o script:
+
+1. roda `prisma migrate status` e detecta `P3005` (banco não vazio, sem histórico);
+2. marca `0001_init` como aplicada (`migrate resolve --applied`);
+3. roda `migrate deploy` (no-op nesse primeiro momento);
+4. se algo falhar, cai para `db push` e avisa — o deploy não fica travado.
+
+A partir daí, **toda mudança de schema é um arquivo em `prisma/migrations/`**, revisável no PR.
+
+## Pendências da F2
+
+- Instalar o cron de backup e **testar o restore** (critério de aceite)
+- Uptime externo apontando para `/api/health`
+- Sentry (ou equivalente) para erros de runtime
+- Testes de integração com Postgres efêmero e e2e de login/publicação
