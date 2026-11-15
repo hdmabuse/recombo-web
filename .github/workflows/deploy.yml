@@ -25,6 +25,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npx prisma generate
       - run: npx prisma validate
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
       - run: npx tsc --noEmit
       - run: npm test
 
