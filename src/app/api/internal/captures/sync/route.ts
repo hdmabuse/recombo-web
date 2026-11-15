@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
+import { syncArtworkForCapture } from "@/lib/captures/artwork";
 
 export const dynamic = "force-dynamic";
 
@@ -84,5 +85,20 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, created, updated, total: parsed.data.items.length });
+  // Capturas já publicadas viram obras do acervo (idempotente).
+  const pending = await prisma.capture.findMany({
+    where: { status: "published", artworkId: null },
+    take: 100,
+  });
+  for (const capture of pending) {
+    await syncArtworkForCapture(capture);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    created,
+    updated,
+    total: parsed.data.items.length,
+    artworks: pending.length,
+  });
 }
