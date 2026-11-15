@@ -65,8 +65,8 @@ export async function GET() {
       items,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "erro desconhecido";
-    return NextResponse.json({ error: `Falha ao ler o banco: ${message}` }, { status: 500 });
+    console.error("[captures] falha ao ler:", error);
+    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
 }
 
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ saved: parsed.data.items.length, artworks });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "erro desconhecido";
-    return NextResponse.json({ error: `Falha ao gravar: ${message}` }, { status: 500 });
+    console.error("[captures] falha ao gravar:", error);
+    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
 }

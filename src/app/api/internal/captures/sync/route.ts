@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
+import { safeEqual } from "@/lib/timing-safe";
 import { syncArtworkForCapture } from "@/lib/captures/artwork";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   const header = request.headers.get("authorization") || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  if (token !== expected) {
+  if (!safeEqual(token, expected)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 

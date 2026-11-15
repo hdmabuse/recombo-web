@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[public/arquivo] falha:", error);
+    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
 }

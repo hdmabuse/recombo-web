@@ -62,3 +62,6 @@ venv/
 
 # Open Design — projeto/ferramenta separada (repo próprio, serviço na 7456)
 open-design/
+
+# uploads em runtime (não versionar)
+public/uploads/

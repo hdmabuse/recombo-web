@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import prisma from "@/lib/prisma";
+import { safeEqual } from "@/lib/timing-safe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
   const header = request.headers.get("authorization") || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  if (token !== expected) {
+  if (!safeEqual(token, expected)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
@@ -42,6 +43,10 @@ export async function POST(request: NextRequest) {
 
   if (!snapshotId || !(file instanceof File)) {
     return NextResponse.json({ error: "snapshotId e file são obrigatórios." }, { status: 422 });
+  }
+  // o id entra no nome do arquivo: só aceita o formato do ArchiveBox
+  if (!/^[a-zA-Z0-9-]{16,64}$/.test(snapshotId)) {
+    return NextResponse.json({ error: "snapshotId inválido." }, { status: 422 });
   }
   if (!file.type.startsWith("image/")) {
     return NextResponse.json({ error: "Arquivo precisa ser imagem." }, { status: 422 });
@@ -98,8 +103,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, thumbnail: thumbUrl, original: fullUrl });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "erro desconhecido";
-    return NextResponse.json({ error: `Falha ao processar imagem: ${message}` }, { status: 500 });
+    console.error("[screenshot] falha ao processar:", error);
+    return NextResponse.json({ error: "Erro interno ao processar imagem." }, { status: 500 });
   }
 }
 
