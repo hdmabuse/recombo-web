@@ -87,29 +87,27 @@ O ArchiveBox vive na rede local (`192.168.68.110:8030`, tag `col:recombo`) e o d
 **não alcança** essa faixa de IP. Por isso o site não fala com ele: a mesa de curadoria
 lê do banco, e um script empurra as capturas.
 
-### 5.1 Sincronizar (quando houver capturas novas)
+### 5.1 Sincronizar — automático a cada 15 minutos
 
-Na máquina que enxerga o ArchiveBox — seu notebook na mesma rede, ou o próprio ZimaOS:
+O droplet alcança o ArchiveBox pelo túnel WireGuard (`10.8.0.6:8030`), então a
+sincronização roda sozinha: `/etc/cron.d/recombo-sync` executa `scripts/sync-cron.sh`
+a cada 15 minutos. Não é preciso rodar nada na mão.
 
-```bash
-ARCHIVEBOX_TOKEN=... CAPTURE_SYNC_TOKEN=... node scripts/sync-captures.mjs
-```
-
-Saída esperada: `ok: 39 criadas, 0 atualizadas`. É idempotente: rodar de novo atualiza,
-não duplica.
-
-No ZimaOS, via Docker (o container não tem saída para o GitHub, então monte o arquivo):
+**O que a sincronização traz:** apenas snapshots com a tag **`col:recombo`**.
+Se você arquivou algo e não quer ver na mesa, mantenha sem a tag; se quer, adicione:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hdmabuse/recombo-web/feature/open-design-layout/scripts/sync-captures.mjs -o /DATA/sync.mjs
-
-docker run --rm --network host \
-  -e ARCHIVEBOX_URL=http://192.168.68.110:8030 \
-  -e ARCHIVEBOX_TOKEN=... -e CAPTURE_SYNC_TOKEN=... \
-  -v /DATA/sync.mjs:/s.mjs:ro node:22-alpine node /s.mjs
+# no ZimaOS, dentro do container do ArchiveBox
+docker exec archivebox archivebox add --tag=col:recombo "https://exemplo.com"
 ```
 
-### 5.2 Curar
+Para conferir o que entrou: `/admin/captures`. Para acompanhar a sincronização:
+
+```bash
+tail -20 /var/log/recombo-sync.log     # no droplet
+```
+
+### 5.2 Curar### 5.2 Curar
 
 1. Abra `/admin/captures`
 2. Cada linha é uma captura, com quatro estados:
