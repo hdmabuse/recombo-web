@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
   { label: "Acervo", href: "/arquivo" },
+  { label: "Capturas", href: "/arquivo/capturas" },
   { label: "Linha do Tempo", href: "/timeline" },
   { label: "Mapa", href: "/mapa" },
   { label: "Rede", href: "/rede" },
