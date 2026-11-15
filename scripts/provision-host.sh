@@ -22,7 +22,25 @@ else
   echo "cron já instalado"
 fi
 
+SYNC_CRON=/etc/cron.d/recombo-sync
+if [ ! -f "$SYNC_CRON" ]; then
+  cat > "$SYNC_CRON" <<'CRON'
+# Sincroniza capturas do ArchiveBox (via WireGuard) a cada 15 minutos
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/15 * * * * root /opt/recombo-web/scripts/sync-cron.sh >> /var/log/recombo-sync.log 2>&1
+CRON
+  chmod 644 "$SYNC_CRON"
+  echo "cron de sincronização instalado"
+fi
+
 mkdir -p "$BACKUP_DIR"
+
+# primeira execução do sync (valida o túnel e popula o acervo)
+if [ ! -f /var/log/recombo-sync.log ]; then
+  echo "rodando sincronização inicial"
+  /opt/recombo-web/scripts/sync-cron.sh || echo "AVISO: sync inicial falhou (veja /var/log/recombo-sync.log)"
+fi
 
 if [ "$(cat "$MARKER" 2>/dev/null || echo '')" = "$TODAY restore=ok" ]; then
   echo "backup já validado hoje ($TODAY)"
