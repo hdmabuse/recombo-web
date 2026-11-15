@@ -8,7 +8,7 @@ async function pngFile(): Promise<File> {
   })
     .png()
     .toBuffer();
-  return new File([buffer], "ok.png", { type: "image/png" });
+  return new File([new Uint8Array(buffer)], "ok.png", { type: "image/png" });
 }
 
 describe("uploadService", () => {
@@ -19,7 +19,9 @@ describe("uploadService", () => {
   });
 
   it("rejeita arquivo cujo conteúdo não é imagem", async () => {
-    const fake = new File([Buffer.from("isto não é um png")], "falso.png", { type: "image/png" });
+    const fake = new File([new Uint8Array(Buffer.from("isto não é um png"))], "falso.png", {
+      type: "image/png",
+    });
     await expect(uploadService.uploadFile(fake)).rejects.toThrow(/imagem inválid/i);
   });
 
@@ -29,17 +31,19 @@ describe("uploadService", () => {
     })
       .jpeg()
       .toBuffer();
-    const mentiroso = new File([jpeg], "mentira.png", { type: "image/png" });
+    const mentiroso = new File([new Uint8Array(jpeg)], "mentira.png", { type: "image/png" });
     await expect(uploadService.uploadFile(mentiroso)).rejects.toThrow(/não corresponde/i);
   });
 
   it("rejeita tipo fora da allowlist", async () => {
-    const svg = new File([Buffer.from("<svg/>")], "x.svg", { type: "image/svg+xml" });
+    const svg = new File([new Uint8Array(Buffer.from("<svg/>"))], "x.svg", {
+      type: "image/svg+xml",
+    });
     await expect(uploadService.uploadFile(svg)).rejects.toThrow(/não permitido/i);
   });
 
   it("rejeita arquivo acima de 25MB", async () => {
-    const grande = new File([Buffer.alloc(25 * 1024 * 1024 + 1)], "grande.png", {
+    const grande = new File([new Uint8Array(Buffer.alloc(25 * 1024 * 1024 + 1))], "grande.png", {
       type: "image/png",
     });
     await expect(uploadService.uploadFile(grande)).rejects.toThrow(/25MB/);
