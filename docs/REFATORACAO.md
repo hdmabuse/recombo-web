@@ -395,3 +395,20 @@ A partir daí, **toda mudança de schema é um arquivo em `prisma/migrations/`**
 - Uptime externo apontando para `/api/health`
 - Sentry (ou equivalente) para erros de runtime
 - Testes de integração com Postgres efêmero e e2e de login/publicação
+
+## Migrações — estado final (verificado em produção)
+
+```
+1 migration found in prisma/migrations
+Error: P3005 (schema não vazio)
+banco sem histórico: marcando 0001_init como aplicada (baseline)
+Migration 0001_init marked as applied.
+No pending migrations to apply.
+deploy OK
+```
+
+**Descoberta no caminho:** `prisma/migrations/` estava listado no `.gitignore`, então nenhuma
+migração chegava ao servidor. Corrigido — e é o tipo de erro que só aparece quando se tenta
+usar o mecanismo de verdade.
+
+Daqui em diante, mudança de schema = arquivo novo em `prisma/migrations/`, revisado no PR.
