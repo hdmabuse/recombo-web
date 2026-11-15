@@ -88,7 +88,9 @@ export default async function ArtworkPage({ params }: Props) {
 
             <div>
               <h1 className="mb-4 text-3xl font-bold text-zinc-900">{artwork.title}</h1>
-              <p className="leading-relaxed text-zinc-600">{artwork.description}</p>
+              <p className="whitespace-pre-wrap break-words leading-relaxed text-zinc-600">
+                {artwork.description}
+              </p>
             </div>
 
             {artwork.files.length > 0 && (
