@@ -18,8 +18,10 @@ CRON
   echo "cron instalado em $CRON_FILE"
 fi
 
-if [ ! -f "$MARKER" ]; then
+# roda (ou revalida) quando o script de restore muda
+HASH="$(sha256sum /opt/recombo-web/scripts/restore-test.sh | cut -d" " -f1)"
+if [ ! -f "$MARKER" ] || [ "$(cat "$MARKER")" != "$HASH" ]; then
   mkdir -p /var/backups/recombo
   /opt/recombo-web/scripts/backup.sh
-  /opt/recombo-web/scripts/restore-test.sh && touch "$MARKER"
+  /opt/recombo-web/scripts/restore-test.sh && echo "$HASH" > "$MARKER"
 fi
