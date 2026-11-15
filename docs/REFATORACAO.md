@@ -441,3 +441,28 @@ validação completa: backup + restore exercitados
 O usuário `recombo` recebeu `CREATEDB` (dado por `postgres`), o que permite ao deploy
 restaurar o dump num banco isolado, conferir as contagens e apagar — sem tocar em produção.
 O marcador diário só grava `restore=ok` quando o restore realmente acontece.
+
+---
+
+# F3 executado (início) — 15/11/2026
+
+Fatia vertical da liberdade de apresentação, provada na página de obra.
+
+| Item           | Estado    | Evidência                                                                             |
+| -------------- | --------- | ------------------------------------------------------------------------------------- |
+| C1. View-model | **feito** | `src/content/artwork.ts`: `ArtworkView` + `toArtworkView` (puro) + `getArtworkView`   |
+| C2. Template   | **feito** | `src/components/templates/ArtworkTemplate.tsx` recebe só o view-model                 |
+| Página fina    | **feito** | `app/obra/[slug]/page.tsx` = 30 linhas, **não importa Prisma**; chunk caiu para 186 B |
+| 404 correto    | **feito** | obra inexistente agora responde **404** (antes 200 com texto)                         |
+| Testes         | **6**     | mapper: campos, quebras de linha, hero, achatamento de artista/arquivo/relação        |
+
+**A prova do conceito:** a página de obra não conhece banco. Trocar o visual é trocar
+`ArtworkTemplate` (ou acrescentar uma skin) — sem tocar em `app/`, `prisma` ou rota.
+
+## Próximo da F3
+
+1. **Segunda skin** (`ArtworkTemplate` alternativo) + seletor — é o que fecha o critério
+   "mudar layout não toca em dados".
+2. `/arquivo` server-side com ISR (hoje é client-side).
+3. `next/image` com srcset (miniaturas já são geradas).
+4. `sitemap.ts`, `robots.ts`, JSON-LD de obra.
