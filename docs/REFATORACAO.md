@@ -326,3 +326,26 @@ testes, backups, observabilidade) e acrescentou três que eu não havia visto �
 | S8   | comparação de token em tempo constante (`lib/timing-safe.ts`)                                            | build                       |
 
 Os demais (S1, S4, S6, S9, S10, R1–R6) ficam no roadmap abaixo.
+
+---
+
+# F1 executado (parcial) — 15/11/2026
+
+| Item                              | Estado             | Evidência                                                                                     |
+| --------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| A1. Guard em 100% das rotas admin | **feito**          | `requireRole` em captures e stats; teste que varre `/api/admin/*`                             |
+| A2. Zod em todas as mutações      | **feito**          | schemas de evento/tag/campo; artworks/artists/captures já tinham; upload/import são multipart |
+| A3. Upload endurecido             | **feito**          | validação por _magic bytes_ (`sharp.metadata`), limite de 25MB, teto de 40MP, fallback local  |
+| A7. Testes + CI                   | **feito (início)** | 11 testes (`vitest`): cobertura de guardas e do upload; CI roda `npm test`                    |
+| A4. Rate limit compartilhado      | pendente           | precisa de Redis/Upstash                                                                      |
+| A5. CSP com nonce                 | pendente           | report-only primeiro                                                                          |
+| A6. Auditoria (`AuditLog`)        | pendente           | requer tabela + writes                                                                        |
+
+**Teste que garante A1/A2** (`src/app/api/__tests__/route-guards.test.ts`):
+
+- toda rota `/api/admin/*` precisa conter `requireRole`
+- toda mutação admin precisa conter `safeParse` (exceto multipart declaradas)
+- rotas `/api/internal/*` precisam usar `safeEqual`
+- nenhuma rota pública pode exportar POST/PUT/PATCH/DELETE
+
+Se alguém adicionar uma rota sem guard, o CI fica vermelho — a regra deixa de ser combinado e passa a ser verificável.

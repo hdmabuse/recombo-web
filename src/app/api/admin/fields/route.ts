@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fieldDefinitionService } from "@/services";
 import { requireRole } from "@/lib/api/guard";
+import { fieldDefinitionCreateSchema, fieldDefinitionUpdateSchema } from "@/lib/validation/admin";
 
 export async function GET(request: Request) {
   try {
@@ -17,8 +18,14 @@ export async function POST(request: Request) {
   const session = await requireRole(["admin", "editor"]);
   if (session instanceof NextResponse) return session;
   try {
-    const body = await request.json();
-    const field = await fieldDefinitionService.create(body);
+    const parsed = fieldDefinitionCreateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 422 },
+      );
+    }
+    const field = await fieldDefinitionService.create(parsed.data);
     return NextResponse.json(field);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao criar campo" }, { status: 500 });
@@ -29,8 +36,17 @@ export async function PUT(request: Request) {
   const session = await requireRole(["admin", "editor"]);
   if (session instanceof NextResponse) return session;
   try {
-    const body = await request.json();
-    const { id, ...data } = body;
+    const body = await request.json().catch(() => ({}));
+    const { id } = body as { id?: string };
+    if (!id) return NextResponse.json({ error: "id é obrigatório" }, { status: 422 });
+    const parsed = fieldDefinitionUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 422 },
+      );
+    }
+    const data = parsed.data;
     const field = await fieldDefinitionService.update(id, data);
     return NextResponse.json(field);
   } catch (error) {

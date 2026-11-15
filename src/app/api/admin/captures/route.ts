@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { archiveboxBaseUrl } from "@/lib/archivebox";
 import { syncArtworkForCapture } from "@/lib/captures/artwork";
+import { requireRole } from "@/lib/api/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,9 @@ const COLLECTION = process.env.ARCHIVEBOX_TAG || "col:recombo";
  * `scripts/sync-captures.mjs`, rodando na máquina que enxerga o ArchiveBox.
  */
 export async function GET() {
+  const session = await requireRole(["admin", "editor", "viewer"]);
+  if (session instanceof NextResponse) return session;
+
   try {
     // Materializa obras para capturas publicadas antes desta funcionalidade existir.
     const pending = await prisma.capture.findMany({
@@ -86,6 +90,9 @@ const bodySchema = z.object({ items: z.array(itemSchema).min(1).max(500) });
 
 /** POST: grava as decisões de curadoria (upsert por snapshotId). */
 export async function POST(request: NextRequest) {
+  const session = await requireRole(["admin", "editor"]);
+  if (session instanceof NextResponse) return session;
+
   let payload: unknown;
   try {
     payload = await request.json();

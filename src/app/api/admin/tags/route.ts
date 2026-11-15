@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { tagService } from "@/services";
 import { requireRole } from "@/lib/api/guard";
+import { tagCreateSchema, tagUpdateSchema } from "@/lib/validation/admin";
 
 export async function GET() {
   try {
@@ -15,8 +16,14 @@ export async function POST(request: Request) {
   const session = await requireRole(["admin", "editor"]);
   if (session instanceof NextResponse) return session;
   try {
-    const body = await request.json();
-    const tag = await tagService.create(body);
+    const parsed = tagCreateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 422 },
+      );
+    }
+    const tag = await tagService.create(parsed.data);
     return NextResponse.json(tag);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao criar tag" }, { status: 500 });
@@ -27,8 +34,17 @@ export async function PUT(request: Request) {
   const session = await requireRole(["admin", "editor"]);
   if (session instanceof NextResponse) return session;
   try {
-    const body = await request.json();
-    const { id, ...data } = body;
+    const body = await request.json().catch(() => ({}));
+    const { id } = body as { id?: string };
+    if (!id) return NextResponse.json({ error: "id é obrigatório" }, { status: 422 });
+    const parsed = tagUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", issues: parsed.error.issues },
+        { status: 422 },
+      );
+    }
+    const data = parsed.data;
     const tag = await tagService.update(id, data);
     return NextResponse.json(tag);
   } catch (error) {

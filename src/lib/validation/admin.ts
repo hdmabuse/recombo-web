@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { ArtworkType, ArtworkStatus, AccessLevel } from "@prisma/client";
+import {
+  ArtworkType,
+  ArtworkStatus,
+  AccessLevel,
+  EventType,
+  TagCategory,
+  FieldType,
+} from "@prisma/client";
 
 /**
  * Schemas de validação/whitelist para as rotas admin.
@@ -58,3 +65,50 @@ export const artistCreateSchema = z.object({
 });
 
 export const artistUpdateSchema = artistCreateSchema.partial();
+
+// ---------------------------------------------------------------------------
+// Eventos, tags e campos customizados (whitelist explícita)
+// ---------------------------------------------------------------------------
+export const eventCreateSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório").max(300),
+  slug: z.string().max(300).optional(),
+  description: z.string().optional(),
+  program: z.string().optional(),
+  type: z.nativeEnum(EventType),
+  dateStart: z.coerce.date(),
+  dateEnd: z.coerce.date().nullable().optional(),
+  venue: z.string().max(300).optional(),
+  address: z.string().max(300).optional(),
+  city: z.string().max(200).optional(),
+  state: z.string().max(100).optional(),
+  country: z.string().max(100).optional(),
+  coordinates: z.record(z.unknown()).nullable().optional(),
+  photos: z.array(z.string()).optional(),
+  videos: z.array(z.string()).optional(),
+  press: z.array(z.string()).optional(),
+});
+
+export const eventUpdateSchema = eventCreateSchema.partial();
+
+export const tagCreateSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório").max(100),
+  slug: z.string().max(100).optional(),
+  category: z.nativeEnum(TagCategory).nullable().optional(),
+  color: z.string().max(20).nullable().optional(),
+});
+
+export const tagUpdateSchema = tagCreateSchema.partial();
+
+export const fieldDefinitionCreateSchema = z.object({
+  entity: z.string().min(1).max(50),
+  name: z.string().min(1).max(100),
+  label: z.string().min(1).max(200),
+  type: z.nativeEnum(FieldType),
+  required: z.boolean().optional(),
+  options: z.array(z.string()).nullable().optional(),
+  defaultValue: z.string().max(500).nullable().optional(),
+  order: z.number().int().optional(),
+  visible: z.boolean().optional(),
+});
+
+export const fieldDefinitionUpdateSchema = fieldDefinitionCreateSchema.partial();

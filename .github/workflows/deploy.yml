@@ -25,6 +25,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npx prisma generate
       - run: npx tsc --noEmit
+      - run: npm test
 
   deploy:
     name: Deploy no droplet
