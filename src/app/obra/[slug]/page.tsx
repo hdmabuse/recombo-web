@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { getArtworkMeta, getArtworkView } from "@/content/artwork";
-import { ArtworkTemplate } from "@/components/templates/ArtworkTemplate";
+import { ArtworkTemplate, resolveArtworkSkin } from "@/components/templates/artwork";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
   params: { slug: string };
+  searchParams?: { skin?: string };
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -25,9 +26,12 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function ArtworkPage({ params }: Props) {
+export default async function ArtworkPage({ params, searchParams }: Props) {
   const view = await getArtworkView(params.slug);
   if (!view) notFound();
 
-  return <ArtworkTemplate view={view} />;
+  // apresentação escolhida na URL (?skin=editorial) ou no ambiente
+  const skin = resolveArtworkSkin(searchParams?.skin ?? process.env.ARTWORK_SKIN);
+
+  return <ArtworkTemplate view={view} skin={skin} />;
 }

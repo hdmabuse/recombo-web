@@ -2,11 +2,8 @@ import Link from "next/link";
 import { Play, Calendar, MapPin, Users, FileText, Tag, ExternalLink, Volume2 } from "lucide-react";
 import type { ArtworkView } from "@/content/artwork";
 
-/**
- * Template de apresentação. Recebe apenas o view-model — não conhece banco,
- * rota nem regra de negócio. Trocar o visual = trocar este arquivo (ou a skin).
- */
-export function ArtworkTemplate({ view }: { view: ArtworkView }) {
+/** Skin clássica: hero 16:9, coluna de conteúdo + barra lateral de ficha técnica. */
+export function ArtworkClassic({ view }: { view: ArtworkView }) {
   return (
     <div className="min-h-screen bg-zinc-50">
       <div className="border-b border-zinc-200 bg-white">
