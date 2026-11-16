@@ -473,6 +473,7 @@ registrá-lo no chooser.
 
 ## Próximo da F3
 
-1. `/arquivo` server-side com ISR (hoje é client-side).
-2. `next/image` com srcset (miniaturas já são geradas).
-3. `sitemap.ts`, `robots.ts`, JSON-LD de obra.
+1. `next/image` com srcset (miniaturas já são geradas).
+2. `sitemap.ts`, `robots.ts`, JSON-LD de obra.
+3. Revalidar o cache ao publicar (`revalidateTag("archive")` no admin).
+4. Títulos de captura: obras vindas de PDF herdam a URL como título — normalizar no sync.
