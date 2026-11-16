@@ -459,10 +459,20 @@ Fatia vertical da liberdade de apresentação, provada na página de obra.
 **A prova do conceito:** a página de obra não conhece banco. Trocar o visual é trocar
 `ArtworkTemplate` (ou acrescentar uma skin) — sem tocar em `app/`, `prisma` ou rota.
 
+## Prova do critério "mudar layout não toca em dados"
+
+| URL                           | Resultado                                                      |
+| ----------------------------- | -------------------------------------------------------------- |
+| `/obra/<slug>`                | skin clássica (hero 16:9 + barra lateral)                      |
+| `/obra/<slug>?skin=editorial` | skin editorial (hero tela cheia, coluna única, ficha em linha) |
+| `/obra/<slug>?skin=hacker`    | cai na clássica (fallback)                                     |
+
+Nenhum arquivo em `app/`, `content/`, `services/` ou `prisma/` mudou entre as duas skins —
+só `components/templates/artwork/`. Criar um layout novo é acrescentar um arquivo e
+registrá-lo no chooser.
+
 ## Próximo da F3
 
-1. **Segunda skin** (`ArtworkTemplate` alternativo) + seletor — é o que fecha o critério
-   "mudar layout não toca em dados".
-2. `/arquivo` server-side com ISR (hoje é client-side).
-3. `next/image` com srcset (miniaturas já são geradas).
-4. `sitemap.ts`, `robots.ts`, JSON-LD de obra.
+1. `/arquivo` server-side com ISR (hoje é client-side).
+2. `next/image` com srcset (miniaturas já são geradas).
+3. `sitemap.ts`, `robots.ts`, JSON-LD de obra.
